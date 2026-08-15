@@ -18,6 +18,26 @@ enum Docker {
         return ["DOCKER_HOST": "unix://" + socket]
     }
 
+    /// La socket de la VM est-elle en place ?
+    ///
+    /// Tant qu'elle manque, `DOCKER_HOST` n'est pas posé et le CLI retombe sur
+    /// `/var/run/docker.sock` — un chemin que Cocker n'utilise jamais, et qui
+    /// donne un message d'erreur incompréhensible pour l'utilisateur.
+    static var isSocketAvailable: Bool {
+        FileManager.default.fileExists(atPath: Colima.dockerSocketPath())
+    }
+
+    /// docker ne distingue pas « démon injoignable » par son code de retour :
+    /// il faut lire le message. Pendant qu'une VM se réveille, c'est un état
+    /// d'attente, pas une panne.
+    static func isDaemonUnreachable(_ message: String) -> Bool {
+        let lowered = message.lowercased()
+        return lowered.contains("cannot connect to the docker daemon")
+            || lowered.contains("failed to connect to the docker api")
+            || lowered.contains("is the docker daemon running")
+            || lowered.contains("no such file or directory")
+    }
+
     // MARK: - Conteneurs
 
     /// Tous les conteneurs, en marche ou non.

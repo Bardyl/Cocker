@@ -141,8 +141,23 @@ final class AppState {
 
         // Une VM à l'arrêt n'a pas de démon à interroger.
         guard vm.state.isUsable else {
-            groups = []
-            diskUsage = nil
+            // Pendant un démarrage ou un arrêt, on garde la dernière liste
+            // connue : la vider ferait s'effondrer le panneau d'un coup, et
+            // l'utilisateur préfère voir ce qui est en train de s'éteindre.
+            if !vm.state.isBusy {
+                groups = []
+                diskUsage = nil
+            }
+            // Une erreur docker n'a plus de sens sans démon en face : la
+            // laisser affichée ferait passer un arrêt volontaire pour une panne.
+            lastError = nil
+            return
+        }
+
+        // colima annonce la VM debout quelques secondes avant que le démon
+        // docker écoute. L'interroger maintenant ne renseignerait sur rien.
+        guard Docker.isSocketAvailable else {
+            lastError = nil
             return
         }
 
@@ -151,7 +166,13 @@ final class AppState {
             lastError = nil
         } catch {
             groups = []
-            lastError = error.localizedDescription
+            // Un démon injoignable pendant une manœuvre, ce n'est pas une
+            // panne : c'est la course entre le sondage et la VM. Le reste,
+            // en revanche, mérite d'être montré tel quel.
+            let isTransient = vm.state.isBusy
+                || runningOperation != nil
+                || Docker.isDaemonUnreachable(error.localizedDescription)
+            lastError = isTransient ? nil : error.localizedDescription
         }
 
         // Le calcul d'espace disque est lent : seulement quand on regarde.

@@ -266,3 +266,39 @@ struct ByteSizeTests {
         #expect(usage.totalBytes > 0)
     }
 }
+
+// MARK: - Bruit pendant les transitions
+
+@Suite("Démon injoignable")
+struct DaemonReadinessTests {
+
+    /// Le message qui s'affichait au réveil : docker retombait sur la socket
+    /// système faute de trouver celle de colima.
+    @Test("Une socket absente n'est pas signalée comme une panne")
+    func recognisesMissingSocket() {
+        let message = "docker ps : failed to connect to the docker API at "
+            + "unix:///var/run/docker.sock; check if the path is correct and if the "
+            + "daemon is running: dial unix /var/run/docker.sock: connect: "
+            + "no such file or directory"
+        #expect(Docker.isDaemonUnreachable(message))
+    }
+
+    @Test("Le message classique du CLI est reconnu")
+    func recognisesClassicMessage() {
+        #expect(Docker.isDaemonUnreachable(
+            "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. "
+            + "Is the docker daemon running?"
+        ))
+    }
+
+    /// Tout ce qui n'est pas un problème de connexion doit continuer d'être
+    /// montré : masquer une vraie erreur serait pire que le faux positif.
+    @Test("Une vraie erreur reste une erreur", arguments: [
+        "Error response from daemon: no such container: frosty-web-1",
+        "permission denied while trying to connect",
+        "invalid reference format",
+    ])
+    func keepsRealErrors(message: String) {
+        #expect(!Docker.isDaemonUnreachable(message))
+    }
+}
