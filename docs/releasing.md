@@ -38,6 +38,7 @@ base64 -i AuthKey_XXXXXXXX.p8 | pbcopy   # goes into ASC_KEY_P8
 | `ASC_KEY_ID` | Key ID from App Store Connect |
 | `ASC_ISSUER_ID` | Issuer ID from the same page |
 | `ASC_KEY_P8` | The `.p8`, base64 encoded |
+| `TAP_TOKEN` | Fine-grained PAT with *Contents: read and write* on `Bardyl/homebrew-tap`. Optional — without it the cask step is skipped and the rest of the release still runs. |
 
 ## Cutting a release
 
@@ -63,9 +64,17 @@ notes: it tells you what moved, never what changed for the person downloading
 the app.
 
 The `Release` workflow stamps the version into `Info.plist` from the tag, runs
-the tests, signs with a hardened runtime, submits to Apple, waits for the
-verdict, staples the ticket into the bundle and attaches the zip to a GitHub
-release.
+the tests, signs with a hardened runtime, and then notarizes **twice**: once for
+the app, once for the disk image that carries it. Both get their ticket stapled,
+so either can be opened offline on a machine that has never seen the binary.
+
+It publishes two assets — a `.dmg` to double-click and a `.zip` for scripts —
+and refreshes the Homebrew cask in `Bardyl/homebrew-tap`.
+
+The disk image window is drawn by `Scripts/make-dmg-background.swift`: a paw
+trail leading from the app to the Applications folder. Its icon positions must
+stay in step with the ones `Scripts/make-dmg.sh` passes to `create-dmg`, or the
+trail no longer points anywhere.
 
 The version lives in the tag and nowhere else. `Info.plist` carries `0.1.0` for
 local builds and is overwritten during the release.

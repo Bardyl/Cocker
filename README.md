@@ -56,6 +56,21 @@ Everything else, Cocker installs.
 
 ## Install
 
+### Homebrew
+
+```sh
+brew tap Bardyl/tap
+brew install --cask cocker
+```
+
+### Download
+
+Grab the `.dmg` from the [latest release](https://github.com/Bardyl/Cocker/releases/latest),
+open it, drag Cocker to Applications. It is signed and notarized, so it opens
+without argument.
+
+A `.zip` is published alongside it for scripts and CI.
+
 ### From source
 
 ```sh

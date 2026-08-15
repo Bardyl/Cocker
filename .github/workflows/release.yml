@@ -81,7 +81,10 @@ jobs:
           codesign -dvvv build/Cocker.app 2>&1 | grep -q "flags=.*runtime" \
             || { echo "::error::hardened runtime absent, Apple refusera la notarisation"; exit 1; }
 
-      - name: Notarize
+      # L'app et l'image disque se notarisent séparément : agrafer les deux
+      # permet à l'utilisateur d'ouvrir aussi bien le .dmg que l'app qu'il en
+      # sort, y compris hors ligne.
+      - name: Notarize the app
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -99,22 +102,80 @@ jobs:
             --issuer "$ASC_ISSUER_ID" \
             --wait --timeout 30m
 
-          rm "$RUNNER_TEMP/asc.p8"
-
       # L'agrafage inscrit le ticket dans le bundle : l'app s'ouvre ensuite
       # même sans réseau, sur une machine qui n'a jamais vu ce binaire.
-      - name: Staple the ticket
+      - name: Staple the app
         run: |
           xcrun stapler staple build/Cocker.app
           xcrun stapler validate build/Cocker.app
           spctl -a -vvv -t exec build/Cocker.app
 
+      - name: Build the disk image
+        env:
+          COCKER_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+        run: |
+          brew install create-dmg
+          ./Scripts/make-dmg.sh "${{ steps.version.outputs.version }}"
+
+      - name: Notarize the disk image
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          dmg="build/Cocker-${{ steps.version.outputs.version }}.dmg"
+
+          xcrun notarytool submit "$dmg" \
+            --key "$RUNNER_TEMP/asc.p8" \
+            --key-id "$ASC_KEY_ID" \
+            --issuer "$ASC_ISSUER_ID" \
+            --wait --timeout 30m
+
+          rm "$RUNNER_TEMP/asc.p8"
+
+          xcrun stapler staple "$dmg"
+          xcrun stapler validate "$dmg"
+          spctl -a -vvv -t open --context context:primary-signature "$dmg"
+
       - name: Package
         run: |
           # Rezippé après agrafage : l'archive envoyée à Apple ne contient pas
-          # encore le ticket.
+          # encore le ticket. Le zip reste publié à côté du dmg, plus commode
+          # pour un script ou une CI.
           ditto -c -k --keepParent build/Cocker.app \
             "$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip"
+
+      # Le cask pointe vers le dmg qu'on vient de publier. Sans TAP_TOKEN,
+      # l'étape est sautée : le reste de la release ne doit pas échouer parce
+      # qu'un dépôt annexe n'est pas configuré.
+      - name: Update the Homebrew cask
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "TAP_TOKEN absent, cask non mis à jour"
+            exit 0
+          fi
+
+          dmg="build/Cocker-$VERSION.dmg"
+          checksum=$(shasum -a 256 "$dmg" | awk '{ print $1 }')
+
+          git clone --depth 1 \
+            "https://x-access-token:$TAP_TOKEN@github.com/Bardyl/homebrew-tap.git" \
+            "$RUNNER_TEMP/tap"
+
+          mkdir -p "$RUNNER_TEMP/tap/Casks"
+          sed -e "s/__VERSION__/$VERSION/" -e "s/__SHA256__/$checksum/" \
+            Packaging/cocker.rb.template > "$RUNNER_TEMP/tap/Casks/cocker.rb"
+
+          cd "$RUNNER_TEMP/tap"
+          if git diff --quiet; then
+            echo "cask déjà à jour"
+            exit 0
+          fi
+          git -c user.name="Mathieu MENUT" -c user.email="mathieu@menut.pro" \
+            commit -am "Cocker $VERSION"
+          git push
 
       - name: Publish the release
         env:
@@ -122,6 +183,7 @@ jobs:
         run: |
           tag="v${{ steps.version.outputs.version }}"
           zip="$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip"
+          dmg="build/Cocker-${{ steps.version.outputs.version }}.dmg"
 
           # Les notes vivent dans l'annotation du tag : écrites à la main,
           # versionnées avec ce qu'elles décrivent.
@@ -151,9 +213,9 @@ jobs:
             gh release edit "$tag" \
               --title "Cocker ${{ steps.version.outputs.version }}" \
               --notes-file "$RUNNER_TEMP/notes.md"
-            gh release upload "$tag" "$zip" --clobber
+            gh release upload "$tag" "$dmg" "$zip" --clobber
           else
-            gh release create "$tag" "$zip" \
+            gh release create "$tag" "$dmg" "$zip" \
               --title "Cocker ${{ steps.version.outputs.version }}" \
               --notes-file "$RUNNER_TEMP/notes.md" \
               --verify-tag

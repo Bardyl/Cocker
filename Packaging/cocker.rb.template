@@ -1,0 +1,26 @@
+# Modèle du cask Homebrew.
+#
+# Le workflow de release y injecte la version et l'empreinte du dmg, puis
+# pousse le résultat dans Bardyl/homebrew-tap. Ce fichier est la source ; le
+# cask publié en est une copie générée, qu'on ne modifie jamais à la main.
+cask "cocker" do
+  version "__VERSION__"
+  sha256 "__SHA256__"
+
+  url "https://github.com/Bardyl/Cocker/releases/download/v#{version}/Cocker-#{version}.dmg"
+  name "Cocker"
+  desc "Menu bar Docker environment for macOS, without Docker Desktop"
+  homepage "https://github.com/Bardyl/Cocker"
+
+  depends_on macos: ">= :sonoma"
+
+  app "Cocker.app"
+
+  # Volontairement limité aux réglages de Cocker : ~/.colima porte les
+  # conteneurs et les images de l'utilisateur, que désinstaller l'interface
+  # n'a aucune raison de détruire.
+  zap trash: [
+    "~/Library/Preferences/pro.menut.cocker.plist",
+    "~/Library/Saved Application State/pro.menut.cocker.savedState",
+  ]
+end
