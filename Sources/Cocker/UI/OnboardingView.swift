@@ -315,7 +315,7 @@ struct OnboardingView: View {
             "Noted"
         case .kennel:
             state.vm.state.isUsable
-                ? "He's already up, finish"
+                ? "He's already up, carry on"
                 : (state.vm.state == .notCreated ? "Build the kennel" : "Wake Cocker up")
         case .working:
             "Hold on…"
@@ -349,8 +349,11 @@ struct OnboardingView: View {
             step = .kennel
 
         case .kennel:
+            // On passe par l'écran final même quand il n'y a rien à démarrer :
+            // fermer la fenêtre ici escamotait le récapitulatif, qu'on ne
+            // voyait donc jamais en rouvrant l'assistant après coup.
             guard !state.vm.state.isUsable else {
-                finish()
+                step = .done
                 return
             }
             let previous = step

@@ -14,6 +14,8 @@ final class AppState {
     private(set) var vm: VMStatus = .unknown
     private(set) var groups: [ContainerGroup] = []
     private(set) var diskUsage: DiskUsage?
+    /// Mémoire occupée par les conteneurs. `nil` tant qu'on ne l'a pas lue.
+    private(set) var memoryUsedBytes: Int64?
 
     /// Opération longue en cours (démarrage, installation…). Non nil = l'UI
     /// verrouille les boutons qui pourraient entrer en conflit.
@@ -192,6 +194,7 @@ final class AppState {
             if !vm.state.isBusy {
                 groups = []
                 diskUsage = nil
+                memoryUsedBytes = nil
             }
             // Une erreur docker n'a plus de sens sans démon en face : la
             // laisser affichée ferait passer un arrêt volontaire pour une panne.
@@ -223,18 +226,22 @@ final class AppState {
 
         // Le calcul d'espace disque est lent : seulement quand on regarde.
         if isPanelVisible {
-            await refreshDiskUsage()
+            await refreshUsage()
         }
     }
 
-    /// `docker system df` à la demande — l'onglet Entretien en dépend, et il
-    /// s'ouvre sans que le panneau le soit.
-    func refreshDiskUsage() async {
+    /// Occupation disque et mémoire, à la demande.
+    ///
+    /// L'onglet Entretien a besoin du disque et s'ouvre sans que le panneau le
+    /// soit ; les deux commandes coûtent 0,02 s, autant les lire ensemble.
+    func refreshUsage() async {
         guard vm.state.isUsable else {
             diskUsage = nil
+            memoryUsedBytes = nil
             return
         }
         diskUsage = try? await Docker.diskUsage()
+        memoryUsedBytes = try? await Docker.memoryUsage()
     }
 
     // MARK: - Journal

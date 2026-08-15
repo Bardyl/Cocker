@@ -34,7 +34,7 @@ struct ResourceControls: View {
                     set: { resources.memoryGiB = $0.rounded() }
                 ),
                 range: 1...Preferences.maxMemoryGiB,
-                display: "\(Int(resources.memoryGiB)) GiB"
+                display: "\(Int(resources.memoryGiB)) / \(Int(Preferences.maxMemoryGiB)) GiB"
             )
 
             slider(
@@ -43,8 +43,14 @@ struct ResourceControls: View {
                     get: { Double(resources.diskGiB) },
                     set: { resources.diskGiB = Int(($0 / 10).rounded()) * 10 }
                 ),
-                range: 20...400,
-                display: "\(resources.diskGiB) GiB"
+                // La borne haute suit l'espace libre du Mac, et la basse la
+                // taille déjà allouée : colima refuse de réduire un disque.
+                range: Double(
+                    Preferences.minimumDiskGiB)...Double(
+                        max(Preferences.maxDiskGiB, resources.diskGiB)
+                    ),
+                display:
+                    "\(resources.diskGiB) / \(max(Preferences.maxDiskGiB, resources.diskGiB)) GiB"
             )
         }
     }
@@ -55,14 +61,24 @@ struct ResourceControls: View {
         range: ClosedRange<Double>,
         display: LocalizedStringKey
     ) -> some View {
-        LabeledContent(label) {
+        LabeledContent {
             HStack(spacing: 10) {
                 Slider(value: value, in: range)
                 Text(display)
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
-                    .frame(width: 62, alignment: .trailing)
+                    // Colonne fixe pour que les trois curseurs aient la même
+                    // longueur, mais alignée à gauche : à droite, une valeur
+                    // courte comme « 5 / 10 » flottait loin de son curseur.
+                    .fixedSize(horizontal: true, vertical: false)
+                    .frame(width: 96, alignment: .leading)
             }
+        } label: {
+            // Colonne de largeur fixe : hors d'un `Form`, `LabeledContent`
+            // dimensionne chaque ligne indépendamment, si bien que le curseur
+            // démarrait après le libellé et que les trois barres n'avaient pas
+            // la même longueur.
+            Text(label).frame(width: 92, alignment: .leading)
         }
     }
 }

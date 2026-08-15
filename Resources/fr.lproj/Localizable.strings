@@ -79,7 +79,6 @@
 "cores" = "cœurs";
 "GiB" = "Gio";
 "GiB allocated" = "Gio alloués";
-"GiB / %lld" = "Gio / %lld";
 "Back to the basket" = "Au panier";
 "Wake Cocker up" = "Réveiller Cocker";
 "Train him" = "Le dresser";
@@ -214,3 +213,5 @@
 /* --- Titres de fenêtre (suivent AppleLanguages, pas la locale d'environnement) --- */
 "Cocker Setup" = "Dressage de Cocker";
 "Logs" = "Logs";
+"He's already up, carry on" = "Il est déjà debout, on continue";
+"of %lld GiB" = "sur %lld Gio";

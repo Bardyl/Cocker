@@ -64,8 +64,8 @@ struct MenuBarPanel: View {
                         systemImage: "cpu"
                     )
                     MetricTile(
-                        value: formatted(state.vm.resources.memoryGiB),
-                        unit: "GiB",
+                        value: memoryValue,
+                        unit: memoryUnit,
                         label: "Memory",
                         systemImage: "memorychip"
                     )
@@ -252,16 +252,34 @@ struct MenuBarPanel: View {
         value == value.rounded() ? String(Int(value)) : String(format: "%.1f", value)
     }
 
+    /// Ce qui est occupé, pas ce qui est alloué : la valeur allouée seule ne
+    /// dit rien de l'état de la machine.
+    ///
+    /// L'unité suit la valeur — quelques mégaoctets de conteneurs affichés en
+    /// gibioctets donnaient « 0.0 », ce qui ressemble à une panne plus qu'à
+    /// une mesure.
+    private var memoryValue: String {
+        guard let used = state.memoryUsedBytes else {
+            return formatted(state.vm.resources.memoryGiB)
+        }
+        return ByteSize.format(used)
+    }
+
+    private var memoryUnit: LocalizedStringKey {
+        state.memoryUsedBytes == nil
+            ? "GiB allocated"
+            : "of \(Int(state.vm.resources.memoryGiB)) GiB"
+    }
+
     private var diskValue: String {
         guard let usage = state.diskUsage else { return String(state.vm.resources.diskGiB) }
-        let usedGiB = Double(usage.totalBytes) / 1_073_741_824
-        return String(format: "%.1f", usedGiB)
+        return ByteSize.format(usage.totalBytes)
     }
 
     private var diskUnit: LocalizedStringKey {
         state.diskUsage == nil
-            ? LocalizedStringKey("GiB allocated")
-            : LocalizedStringKey("GiB / \(state.vm.resources.diskGiB)")
+            ? "GiB allocated"
+            : "of \(state.vm.resources.diskGiB) GiB"
     }
 }
 

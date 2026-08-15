@@ -239,7 +239,7 @@ private struct MaintenanceTab: View {
                     Button("Refresh") {
                         Task {
                             await state.refresh()
-                            await state.refreshDiskUsage()
+                            await state.refreshUsage()
                         }
                     }
                     .disabled(state.isBusy)
@@ -262,7 +262,7 @@ private struct MaintenanceTab: View {
             }
         }
         .formStyle(.grouped)
-        .task { await state.refreshDiskUsage() }
+        .task { await state.refreshUsage() }
         .confirmationDialog("Clean up Docker?", isPresented: $isConfirmingPrune) {
             Button("Clean up", role: .destructive) {
                 Task { await state.prune(includeVolumes: pruneVolumes) }

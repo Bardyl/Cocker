@@ -130,6 +130,34 @@ enum Docker {
         return combined
     }
 
+    // MARK: - Mémoire
+
+    /// Mémoire réellement occupée par les conteneurs, en octets.
+    ///
+    /// Il n'existe pas de lecture simple de la RAM consommée par la VM
+    /// elle-même ; la somme des conteneurs est la mesure qui a du sens pour
+    /// l'utilisateur, et c'est celle qui bouge quand il lance une pile.
+    static func memoryUsage() async throws -> Int64 {
+        let docker = try binary()
+        let result = try await Shell.run(
+            docker,
+            ["stats", "--no-stream", "--format", "{{json .}}"],
+            environment: environment()
+        )
+        guard result.isSuccess else {
+            throw Shell.Failure(command: "docker stats", message: result.failureMessage)
+        }
+        return parseMemoryUsage(from: result.stdout)
+    }
+
+    /// Séparé de l'appel au CLI pour être testable.
+    static func parseMemoryUsage(from output: String) -> Int64 {
+        output
+            .split(separator: "\n")
+            .compactMap { RawStats.decode(String($0))?.usedBytes }
+            .reduce(0, +)
+    }
+
     // MARK: - Disque
 
     static func diskUsage() async throws -> DiskUsage {
@@ -267,6 +295,27 @@ private struct RawContainer: Decodable {
     }
 }
 
+/// La ligne JSON produite par `docker stats --format '{{json .}}'`.
+private struct RawStats: Decodable {
+    var memUsage: String?
+
+    enum CodingKeys: String, CodingKey {
+        case memUsage = "MemUsage"
+    }
+
+    static func decode(_ line: String) -> RawStats? {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard trimmed.hasPrefix("{"), let data = trimmed.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(RawStats.self, from: data)
+    }
+
+    /// docker écrit « 12.5MiB / 11.62GiB » : la part utilisée est avant la barre.
+    var usedBytes: Int64? {
+        guard let memUsage, let used = memUsage.split(separator: "/").first else { return nil }
+        return ByteSize.parse(String(used))
+    }
+}
+
 private struct RawDiskRow: Decodable {
     var kind: String
     var size: String
@@ -310,7 +359,7 @@ enum ByteSize {
 
     static func format(_ bytes: Int64) -> String {
         let formatter = ByteCountFormatter()
-        formatter.allowedUnits = [.useGB, .useMB]
+        formatter.allowedUnits = [.useGB, .useMB, .useKB]
         formatter.countStyle = .binary
         return formatter.string(fromByteCount: bytes)
     }

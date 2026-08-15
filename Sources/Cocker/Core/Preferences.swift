@@ -104,11 +104,44 @@ final class Preferences {
         return VMResources(cpus: cores, memoryGiB: memory, diskGiB: 60)
     }
 
-    /// Bornes hautes proposées dans l'interface : au-delà, la VM affame macOS.
+    // MARK: - Bornes hautes
+    //
+    // Toutes déduites de la machine, jamais codées en dur : proposer un
+    // curseur qui va plus loin que ce que le Mac peut donner, c'est promettre
+    // une VM qui refusera de démarrer.
+
     static var maxCPUs: Int { max(2, ProcessInfo.processInfo.processorCount) }
 
+    /// La mémoire physique moins ce qu'il faut laisser à macOS pour respirer.
     static var maxMemoryGiB: Double {
         let physicalGiB = Double(ProcessInfo.processInfo.physicalMemory) / 1_073_741_824
-        return max(4, (physicalGiB - 4).rounded(.down))
+        return max(4, (physicalGiB - Self.reservedMemoryGiB).rounded(.down))
     }
+
+    /// L'espace réellement disponible, moins une marge.
+    ///
+    /// `volumeAvailableCapacityForImportantUsage` est la bonne clé : elle
+    /// compte ce que macOS libérerait au besoin (purgeable, iCloud), donc ce
+    /// qu'on peut vraiment prendre — pas le simple `df`, plus pessimiste.
+    ///
+    /// L'image disque de colima est creuse : réserver 200 Gio n'en consomme
+    /// pas 200 tout de suite. La borne protège malgré tout d'une promesse
+    /// intenable une fois la VM remplie.
+    static var maxDiskGiB: Int {
+        let fallback = 200
+        let home = URL(fileURLWithPath: NSHomeDirectory())
+
+        guard
+            let capacity = try? home.resourceValues(
+                forKeys: [.volumeAvailableCapacityForImportantUsageKey]
+            ).volumeAvailableCapacityForImportantUsage
+        else { return fallback }
+
+        let availableGiB = Int(Double(capacity) / 1_073_741_824)
+        return max(Self.minimumDiskGiB, availableGiB - Self.reservedDiskGiB)
+    }
+
+    static let minimumDiskGiB = 20
+    private static let reservedMemoryGiB: Double = 4
+    private static let reservedDiskGiB = 20
 }

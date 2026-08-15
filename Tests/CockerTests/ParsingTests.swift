@@ -249,6 +249,28 @@ struct ByteSizeTests {
         #expect(ByteSize.parse("N/A") == 0)
     }
 
+    /// `docker stats` écrit « utilisé / limite » : seule la part gauche compte.
+    @Test("La mémoire occupée est la somme des conteneurs")
+    func sumsContainerMemory() {
+        let output = """
+            {"Name":"frosty-web-1","MemUsage":"5.297MiB / 11.66GiB","MemPerc":"0.04%"}
+            {"Name":"frosty-db-1","MemUsage":"22.5MiB / 11.66GiB","MemPerc":"0.19%"}
+            """
+        let expected = ByteSize.parse("5.297MiB") + ByteSize.parse("22.5MiB")
+        #expect(Docker.parseMemoryUsage(from: output) == expected)
+    }
+
+    @Test("La limite de la VM n'est pas comptée comme de l'occupation")
+    func ignoresTheLimitSide() {
+        let output = #"{"Name":"x","MemUsage":"1GiB / 11.66GiB"}"#
+        #expect(Docker.parseMemoryUsage(from: output) == ByteSize.parse("1GiB"))
+    }
+
+    @Test("Sans conteneur, l'occupation mémoire est nulle")
+    func handlesNoContainers() {
+        #expect(Docker.parseMemoryUsage(from: "") == 0)
+    }
+
     @Test("Le tableau de `docker system df` est ventilé par type")
     func parsesDiskUsageRows() {
         let output = """
