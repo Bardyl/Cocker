@@ -19,7 +19,12 @@ jobs:
     runs-on: macos-15
 
     steps:
+      # fetch-tags : sans l'objet du tag annoté, les notes de version se
+      # rabattraient silencieusement sur le message du dernier commit.
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Resolve the version
         id: version
@@ -120,13 +125,29 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # --notes-from-tag : les notes de version vivent dans l'annotation
-          # du tag, donc dans le dépôt, écrites à la main. La liste des commits
-          # que génère GitHub ne dit pas ce qui change pour l'utilisateur.
-          gh release create "v${{ steps.version.outputs.version }}" \
-            "$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip" \
-            --title "Cocker ${{ steps.version.outputs.version }}" \
-            --notes-from-tag \
-            --verify-tag || \
-          gh release upload "v${{ steps.version.outputs.version }}" \
-            "$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip" --clobber
+          tag="v${{ steps.version.outputs.version }}"
+          zip="$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip"
+
+          # Les notes vivent dans l'annotation du tag : écrites à la main,
+          # versionnées avec ce qu'elles décrivent. On les extrait nous-mêmes
+          # plutôt que par --notes-from-tag, qui retombe sans prévenir sur le
+          # message du dernier commit quand l'objet du tag manque.
+          git tag -l --format='%(contents)' "$tag" > "$RUNNER_TEMP/notes.md"
+          if [ ! -s "$RUNNER_TEMP/notes.md" ]; then
+            echo "::error::le tag $tag n'a pas d'annotation, pas de notes de version"
+            exit 1
+          fi
+
+          # Idempotent : republier un tag ne doit pas laisser la release avec
+          # ses anciennes notes.
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" \
+              --title "Cocker ${{ steps.version.outputs.version }}" \
+              --notes-file "$RUNNER_TEMP/notes.md"
+            gh release upload "$tag" "$zip" --clobber
+          else
+            gh release create "$tag" "$zip" \
+              --title "Cocker ${{ steps.version.outputs.version }}" \
+              --notes-file "$RUNNER_TEMP/notes.md" \
+              --verify-tag
+          fi

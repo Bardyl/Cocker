@@ -45,7 +45,7 @@ Release notes come from the tag annotation, so the tag must be annotated and
 its message is what readers see:
 
 ```sh
-git tag -a v0.1.0 -F - <<'NOTES'
+git tag -a v0.1.0 --cleanup=verbatim -F - <<'NOTES'
 Short line on what this release is about.
 
 ### What changed
@@ -54,6 +54,9 @@ NOTES
 
 git push origin v0.1.0
 ```
+
+`--cleanup=verbatim` is not optional: without it git strips every line starting
+with `#`, which silently deletes all your Markdown headings from the notes.
 
 GitHub can generate a commit list instead, but a commit list is not release
 notes: it tells you what moved, never what changed for the person downloading
