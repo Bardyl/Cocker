@@ -120,10 +120,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # --notes-from-tag : les notes de version vivent dans l'annotation
+          # du tag, donc dans le dépôt, écrites à la main. La liste des commits
+          # que génère GitHub ne dit pas ce qui change pour l'utilisateur.
           gh release create "v${{ steps.version.outputs.version }}" \
             "$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip" \
             --title "Cocker ${{ steps.version.outputs.version }}" \
-            --generate-notes \
+            --notes-from-tag \
             --verify-tag || \
           gh release upload "v${{ steps.version.outputs.version }}" \
             "$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip" --clobber

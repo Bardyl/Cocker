@@ -41,10 +41,23 @@ base64 -i AuthKey_XXXXXXXX.p8 | pbcopy   # goes into ASC_KEY_P8
 
 ## Cutting a release
 
+Release notes come from the tag annotation, so the tag must be annotated and
+its message is what readers see:
+
 ```sh
-git tag v0.1.0
+git tag -a v0.1.0 -F - <<'NOTES'
+Short line on what this release is about.
+
+### What changed
+- written for someone using the app, not reading the diff
+NOTES
+
 git push origin v0.1.0
 ```
+
+GitHub can generate a commit list instead, but a commit list is not release
+notes: it tells you what moved, never what changed for the person downloading
+the app.
 
 The `Release` workflow stamps the version into `Info.plist` from the tag, runs
 the tests, signs with a hardened runtime, submits to Apple, waits for the
