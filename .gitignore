@@ -1,0 +1,17 @@
+# Secrets — le coffre vit dans le trousseau, jamais dans le dépôt.
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Build
+.build/
+build/
+*.xcuserstate
+.swiftpm/
+
+# Outillage local, propre à la machine
+.claude/
+.frosty/
