@@ -71,6 +71,11 @@ so either can be opened offline on a machine that has never seen the binary.
 It publishes two assets — a `.dmg` to double-click and a `.zip` for scripts —
 and refreshes the Homebrew cask in `Bardyl/homebrew-tap`.
 
+`Packaging/cocker.rb.template` is the source of that cask; the copy in the tap
+is generated and should never be edited by hand. Note that users must run
+`brew trust bardyl/tap` before installing: Homebrew now refuses casks from
+third-party taps until the source is vouched for.
+
 The disk image window is drawn by `Scripts/make-dmg-background.swift`: a paw
 trail leading from the app to the Applications folder. Its icon positions must
 stay in step with the ones `Scripts/make-dmg.sh` passes to `create-dmg`, or the

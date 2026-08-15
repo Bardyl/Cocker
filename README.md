@@ -60,8 +60,14 @@ Everything else, Cocker installs.
 
 ```sh
 brew tap Bardyl/tap
+brew trust bardyl/tap
 brew install --cask cocker
 ```
+
+The `trust` line is not optional: Homebrew refuses casks from third-party taps
+until you say you trust the source. It is asking you to vouch for this one, so
+read [the cask](https://github.com/Bardyl/homebrew-tap/blob/main/Casks/cocker.rb)
+first — it is twenty lines.
 
 ### Download
 

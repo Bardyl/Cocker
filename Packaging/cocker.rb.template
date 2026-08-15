@@ -12,7 +12,7 @@ cask "cocker" do
   desc "Menu bar Docker environment for macOS, without Docker Desktop"
   homepage "https://github.com/Bardyl/Cocker"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   app "Cocker.app"
 
