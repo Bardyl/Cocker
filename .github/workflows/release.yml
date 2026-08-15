@@ -1,0 +1,129 @@
+name: Release
+
+# Poussez un tag `vX.Y.Z` pour publier. La version du tag est celle qui
+# finit dans l'Info.plist : elle n'est écrite nulle part ailleurs.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version à publier, sans le v (ex. 0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve the version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            version="${{ github.event.inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Publication de $version"
+
+      - name: Stamp the bundle version
+        run: |
+          /usr/libexec/PlistBuddy -c \
+            "Set :CFBundleShortVersionString ${{ steps.version.outputs.version }}" \
+            Resources/Info.plist
+          /usr/libexec/PlistBuddy -c \
+            "Set :CFBundleVersion ${{ github.run_number }}" \
+            Resources/Info.plist
+
+      - name: Test
+        run: swift test
+
+      # Le certificat vit dans un trousseau jetable, propre à ce job : rien
+      # ne subsiste sur le runner, et le trousseau de connexion n'est pas touché.
+      - name: Import the signing certificate
+        env:
+          CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          keychain="$RUNNER_TEMP/build.keychain-db"
+          password="$(uuidgen)"
+
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 900 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+
+          echo -n "$CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$keychain" \
+            -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/cert.p12"
+
+          # Sans cette autorisation, codesign réclamerait une validation
+          # interactive impossible sur un runner.
+          security set-key-partition-list -S apple-tool:,apple: \
+            -k "$password" "$keychain" >/dev/null
+
+          security list-keychain -d user -s "$keychain" login.keychain-db
+
+      - name: Build and sign
+        env:
+          COCKER_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+        run: ./Scripts/bundle.sh release
+
+      - name: Verify the signature
+        run: |
+          codesign --verify --strict --verbose=2 build/Cocker.app
+          codesign -dvvv build/Cocker.app 2>&1 | grep -q "flags=.*runtime" \
+            || { echo "::error::hardened runtime absent, Apple refusera la notarisation"; exit 1; }
+
+      - name: Notarize
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          echo -n "$ASC_KEY_P8" | base64 --decode > "$RUNNER_TEMP/asc.p8"
+
+          # `ditto` et non `zip` : lui seul préserve les liens symboliques et
+          # les attributs étendus du bundle, que la notarisation vérifie.
+          ditto -c -k --keepParent build/Cocker.app "$RUNNER_TEMP/submit.zip"
+
+          xcrun notarytool submit "$RUNNER_TEMP/submit.zip" \
+            --key "$RUNNER_TEMP/asc.p8" \
+            --key-id "$ASC_KEY_ID" \
+            --issuer "$ASC_ISSUER_ID" \
+            --wait --timeout 30m
+
+          rm "$RUNNER_TEMP/asc.p8"
+
+      # L'agrafage inscrit le ticket dans le bundle : l'app s'ouvre ensuite
+      # même sans réseau, sur une machine qui n'a jamais vu ce binaire.
+      - name: Staple the ticket
+        run: |
+          xcrun stapler staple build/Cocker.app
+          xcrun stapler validate build/Cocker.app
+          spctl -a -vvv -t exec build/Cocker.app
+
+      - name: Package
+        run: |
+          # Rezippé après agrafage : l'archive envoyée à Apple ne contient pas
+          # encore le ticket.
+          ditto -c -k --keepParent build/Cocker.app \
+            "$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            "$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip" \
+            --title "Cocker ${{ steps.version.outputs.version }}" \
+            --generate-notes \
+            --verify-tag || \
+          gh release upload "v${{ steps.version.outputs.version }}" \
+            "$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip" --clobber
