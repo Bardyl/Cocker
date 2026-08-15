@@ -7,7 +7,15 @@ struct MenuBarPanel: View {
     @Environment(\.openSettings) private var openSettings
 
     @State private var collapsedGroups: Set<String> = []
-    @State private var listHeight: CGFloat = 0
+
+    /// Le panneau garde toujours la même taille.
+    ///
+    /// La fenêtre d'un `MenuBarExtra` grandit avec son contenu mais ne
+    /// rétrécit pas : une liste qui se vide laissait un grand trou transparent
+    /// au-dessus du panneau. Une hauteur constante supprime le problème à la
+    /// racine, et donne au passage un panneau qui ne saute pas sous la souris
+    /// quand un conteneur apparaît.
+    static let panelSize = CGSize(width: 380, height: 540)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,12 +24,13 @@ struct MenuBarPanel: View {
             Divider()
 
             content
+                .frame(maxHeight: .infinity)
 
             Divider()
 
             footer
         }
-        .frame(width: 380)
+        .frame(width: Self.panelSize.width, height: Self.panelSize.height)
         .onAppear { state.isPanelVisible = true }
         .onDisappear { state.isPanelVisible = false }
     }
@@ -131,34 +140,16 @@ struct MenuBarPanel: View {
             )
         } else {
             ScrollView {
-                // `VStack` et non `LazyVStack` : un empilement paresseux ne
-                // met en page que ce qui est visible, donc il se mesurerait à
-                // zéro — et une hauteur nulle l'empêcherait de jamais rien
-                // afficher. Quelques dizaines de lignes ne coûtent rien.
-                VStack(spacing: 4) {
+                LazyVStack(spacing: 4, pinnedViews: .sectionHeaders) {
                     ForEach(visibleGroups) { group in
                         groupSection(group)
                     }
                 }
                 .padding(.vertical, 8)
                 .padding(.horizontal, 10)
-                .background(
-                    GeometryReader { proxy in
-                        Color.clear.preference(key: ListHeightKey.self, value: proxy.size.height)
-                    }
-                )
             }
-            .onPreferenceChange(ListHeightKey.self) { height in
-                Task { @MainActor in listHeight = height }
-            }
-            // Une hauteur explicite : la fenêtre d'une barre de menus se cale
-            // sur le contenu, et un `ScrollView` n'a pas de hauteur idéale à
-            // lui proposer. Sans ça, le panneau s'affiche vide.
-            .frame(height: min(max(listHeight, 60), Self.maxListHeight))
         }
     }
-
-    private static let maxListHeight: CGFloat = 560
 
     private var onboardingMessage: String {
         let missing = state.missingRequiredTools.map(\.kind.displayName)
@@ -428,10 +419,3 @@ private struct ContainerRow: View {
     }
 }
 
-/// Remonte la hauteur réelle de la liste jusqu'au panneau.
-private struct ListHeightKey: PreferenceKey {
-    static let defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
