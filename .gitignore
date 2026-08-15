@@ -15,3 +15,4 @@ build/
 # Outillage local, propre à la machine
 .claude/
 .frosty/
+CLAUDE.md
