@@ -79,7 +79,8 @@ final class AppState {
 
     /// Les réglages diffèrent-ils de ce que la VM applique réellement ?
     var hasPendingResourceChange: Bool {
-        vm.state != .missing && vm.state != .notCreated && vm.resources != preferences.desiredResources
+        vm.state != .missing && vm.state != .notCreated
+            && vm.resources != preferences.desiredResources
     }
 
     var isBusy: Bool { runningOperation != nil }
@@ -213,7 +214,8 @@ final class AppState {
             // Un démon injoignable pendant une manœuvre, ce n'est pas une
             // panne : c'est la course entre le sondage et la VM. Le reste,
             // en revanche, mérite d'être montré tel quel.
-            let isTransient = vm.state.isBusy
+            let isTransient =
+                vm.state.isBusy
                 || runningOperation != nil
                 || Docker.isDaemonUnreachable(error.localizedDescription)
             lastError = isTransient ? nil : error.localizedDescription

@@ -1,4 +1,5 @@
 import Testing
+
 @testable import Cocker
 
 /// Ces tests portent sur les seuls endroits où Cocker dépend du format de
@@ -12,12 +13,12 @@ struct ContainerParsingTests {
 
     /// Une ligne réelle de `docker ps --format '{{json .}}'`, docker 29.
     let composeLine = """
-    {"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2026-08-15 15:45:12 -0400 EDT",\
-    "ID":"9f1c2","Image":"nginx:alpine","Labels":"com.docker.compose.project=frosty,\
-    com.docker.compose.service=web,maintainer=NGINX","Names":"frosty-web-1",\
-    "Ports":"0.0.0.0:5173->80/tcp, [::]:5173->80/tcp","State":"running",\
-    "Status":"Up 3 minutes"}
-    """
+        {"Command":"\\"/docker-entrypoint.…\\"","CreatedAt":"2026-08-15 15:45:12 -0400 EDT",\
+        "ID":"9f1c2","Image":"nginx:alpine","Labels":"com.docker.compose.project=frosty,\
+        com.docker.compose.service=web,maintainer=NGINX","Names":"frosty-web-1",\
+        "Ports":"0.0.0.0:5173->80/tcp, [::]:5173->80/tcp","State":"running",\
+        "Status":"Up 3 minutes"}
+        """
 
     @Test("Les champs essentiels sont lus")
     func readsCoreFields() {
@@ -54,9 +55,9 @@ struct ContainerParsingTests {
     @Test("Un conteneur sans port publié n'en déclare aucun")
     func handlesNoPorts() {
         let line = """
-        {"ID":"abc","Image":"redis:alpine","Names":"frosty-cache-1","Ports":"",\
-        "State":"running","Status":"Up 1 minute","Labels":""}
-        """
+            {"ID":"abc","Image":"redis:alpine","Names":"frosty-cache-1","Ports":"",\
+            "State":"running","Status":"Up 1 minute","Labels":""}
+            """
         #expect(Docker.parseContainers(from: line).first?.ports.isEmpty == true)
     }
 
@@ -65,10 +66,10 @@ struct ContainerParsingTests {
     @Test("Les ports non publiés sont ignorés")
     func ignoresUnpublishedPorts() {
         let line = """
-        {"ID":"abc","Image":"axllent/mailpit","Names":"fantomas-mail-1",\
-        "Ports":"1025/tcp, 1110/tcp, 0.0.0.0:8025->8025/tcp","State":"running",\
-        "Status":"Up 2 minutes","Labels":""}
-        """
+            {"ID":"abc","Image":"axllent/mailpit","Names":"fantomas-mail-1",\
+            "Ports":"1025/tcp, 1110/tcp, 0.0.0.0:8025->8025/tcp","State":"running",\
+            "Status":"Up 2 minutes","Labels":""}
+            """
         let ports = Docker.parseContainers(from: line).first?.ports
         #expect(ports?.count == 1)
         #expect(ports?.first?.hostPort == 8025)
@@ -77,19 +78,19 @@ struct ContainerParsingTests {
     @Test("Un état inconnu ne fait pas perdre le conteneur")
     func toleratesUnknownState() {
         let line = """
-        {"ID":"abc","Image":"alpine","Names":"x","Ports":"","State":"hibernating",\
-        "Status":"?","Labels":""}
-        """
+            {"ID":"abc","Image":"alpine","Names":"x","Ports":"","State":"hibernating",\
+            "Status":"?","Labels":""}
+            """
         #expect(Docker.parseContainers(from: line).first?.state == .unknown)
     }
 
     @Test("Une ligne illisible est écartée sans emporter les autres")
     func skipsGarbageLines() {
         let output = """
-        pas du json
-        {"ID":"abc","Image":"alpine","Names":"x","Ports":"","State":"running","Status":"Up","Labels":""}
+            pas du json
+            {"ID":"abc","Image":"alpine","Names":"x","Ports":"","State":"running","Status":"Up","Labels":""}
 
-        """
+            """
         #expect(Docker.parseContainers(from: output).count == 1)
     }
 
@@ -161,9 +162,9 @@ struct ColimaParsingTests {
     @Test("Les clés au singulier restent comprises")
     func readsSingularKeys() {
         let output = """
-        {"display_name":"default","status":"Running","arch":"aarch64",\
-        "runtime":"docker","cpu":6,"memory":12884901888,"disk":64424509440}
-        """
+            {"display_name":"default","status":"Running","arch":"aarch64",\
+            "runtime":"docker","cpu":6,"memory":12884901888,"disk":64424509440}
+            """
         let status = try! #require(Colima.parseList(from: output))
 
         #expect(status.resources.cpus == 6)
@@ -176,9 +177,9 @@ struct ColimaParsingTests {
     @Test("La sortie de `colima list` est lue malgré des clés différentes")
     func readsListOutput() {
         let output = """
-        {"name":"default","status":"Running","arch":"aarch64","cpus":6,\
-        "memory":12884901888,"disk":64424509440,"runtime":"docker"}
-        """
+            {"name":"default","status":"Running","arch":"aarch64","cpus":6,\
+            "memory":12884901888,"disk":64424509440,"runtime":"docker"}
+            """
         let status = try! #require(Colima.parseList(from: output))
 
         #expect(status.state == .running)
@@ -189,9 +190,9 @@ struct ColimaParsingTests {
     @Test("Un profil arrêté est reconnu comme tel")
     func readsStoppedProfile() {
         let output = """
-        {"name":"default","status":"Stopped","arch":"aarch64","cpus":4,\
-        "memory":8589934592,"disk":64424509440,"runtime":"docker"}
-        """
+            {"name":"default","status":"Stopped","arch":"aarch64","cpus":4,\
+            "memory":8589934592,"disk":64424509440,"runtime":"docker"}
+            """
         #expect(Colima.parseList(from: output)?.state == .stopped)
     }
 
@@ -222,13 +223,15 @@ struct ColimaParsingTests {
 @Suite("Tailles docker")
 struct ByteSizeTests {
 
-    @Test("Les unités usuelles sont converties", arguments: [
-        ("0B", Int64(0)),
-        ("512B", 512),
-        ("1.5kB", 1_536),
-        ("890MB", 933_232_640),
-        ("1.23GB", 1_320_702_444),
-    ])
+    @Test(
+        "Les unités usuelles sont converties",
+        arguments: [
+            ("0B", Int64(0)),
+            ("512B", 512),
+            ("1.5kB", 1_536),
+            ("890MB", 933_232_640),
+            ("1.23GB", 1_320_702_444),
+        ])
     func parsesUnits(text: String, expected: Int64) {
         // Tolérance d'un octet : la conversion passe par un flottant.
         #expect(abs(ByteSize.parse(text) - expected) <= 1)
@@ -249,11 +252,11 @@ struct ByteSizeTests {
     @Test("Le tableau de `docker system df` est ventilé par type")
     func parsesDiskUsageRows() {
         let output = """
-        {"Type":"Images","TotalCount":"5","Active":"5","Size":"687.8MB","Reclaimable":"0B (0%)"}
-        {"Type":"Containers","TotalCount":"12","Active":"11","Size":"1.09MB","Reclaimable":"4.096kB (0%)"}
-        {"Type":"Local Volumes","TotalCount":"2","Active":"2","Size":"95.22MB","Reclaimable":"0B (0%)"}
-        {"Type":"Build Cache","TotalCount":"0","Active":"0","Size":"0B","Reclaimable":"0B"}
-        """
+            {"Type":"Images","TotalCount":"5","Active":"5","Size":"687.8MB","Reclaimable":"0B (0%)"}
+            {"Type":"Containers","TotalCount":"12","Active":"11","Size":"1.09MB","Reclaimable":"4.096kB (0%)"}
+            {"Type":"Local Volumes","TotalCount":"2","Active":"2","Size":"95.22MB","Reclaimable":"0B (0%)"}
+            {"Type":"Build Cache","TotalCount":"0","Active":"0","Size":"0B","Reclaimable":"0B"}
+            """
         let usage = Docker.parseDiskUsage(from: output)
 
         #expect(usage.imagesBytes == ByteSize.parse("687.8MB"))
@@ -272,7 +275,8 @@ struct DaemonReadinessTests {
     /// système faute de trouver celle de colima.
     @Test("Une socket absente n'est pas signalée comme une panne")
     func recognisesMissingSocket() {
-        let message = "docker ps : failed to connect to the docker API at "
+        let message =
+            "docker ps : failed to connect to the docker API at "
             + "unix:///var/run/docker.sock; check if the path is correct and if the "
             + "daemon is running: dial unix /var/run/docker.sock: connect: "
             + "no such file or directory"
@@ -281,19 +285,22 @@ struct DaemonReadinessTests {
 
     @Test("Le message classique du CLI est reconnu")
     func recognisesClassicMessage() {
-        #expect(Docker.isDaemonUnreachable(
-            "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. "
-            + "Is the docker daemon running?"
-        ))
+        #expect(
+            Docker.isDaemonUnreachable(
+                "Cannot connect to the Docker daemon at unix:///var/run/docker.sock. "
+                    + "Is the docker daemon running?"
+            ))
     }
 
     /// Tout ce qui n'est pas un problème de connexion doit continuer d'être
     /// montré : masquer une vraie erreur serait pire que le faux positif.
-    @Test("Une vraie erreur reste une erreur", arguments: [
-        "Error response from daemon: no such container: frosty-web-1",
-        "permission denied while trying to connect",
-        "invalid reference format",
-    ])
+    @Test(
+        "Une vraie erreur reste une erreur",
+        arguments: [
+            "Error response from daemon: no such container: frosty-web-1",
+            "permission denied while trying to connect",
+            "invalid reference format",
+        ])
     func keepsRealErrors(message: String) {
         #expect(!Docker.isDaemonUnreachable(message))
     }

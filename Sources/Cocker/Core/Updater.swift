@@ -43,7 +43,8 @@ final class Updater {
 
         let now = Date()
         if let last = defaults.object(forKey: Self.lastCheckKey) as? Date,
-           now.timeIntervalSince(last) < 24 * 3600 {
+            now.timeIntervalSince(last) < 24 * 3600
+        {
             return
         }
         defaults.set(now, forKey: Self.lastCheckKey)
@@ -59,7 +60,8 @@ final class Updater {
                 state = .upToDate
                 return
             }
-            state = Self.isNewer(latest, than: Self.currentVersion)
+            state =
+                Self.isNewer(latest, than: Self.currentVersion)
                 ? .available(version: latest, url: Self.releasesURL)
                 : .upToDate
         } catch {
@@ -105,7 +107,7 @@ final class Updater {
         var errorDescription: String? {
             switch self {
             case .badResponse(let code):
-                "GitHub a répondu \(code)."
+                "GitHub answered \(code)."
             }
         }
     }

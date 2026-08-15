@@ -121,9 +121,11 @@ private struct GeneralTab: View {
             } header: {
                 Text("Startup")
             } footer: {
-                Text("The colima VM keeps running after you quit Cocker: `docker` stays usable in your terminal.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "The colima VM keeps running after you quit Cocker: `docker` stays usable in your terminal."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Section {
@@ -147,9 +149,11 @@ private struct GeneralTab: View {
             Section {
                 Toggle("Check for updates at launch", isOn: $preferences.checksForUpdates)
             } footer: {
-                Text("One request a day to the GitHub API, and nothing else: Cocker makes no other network call.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "One request a day to the GitHub API, and nothing else: Cocker makes no other network call."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
 
             Section("Virtual machine") {
@@ -172,7 +176,8 @@ private struct GeneralTab: View {
     /// Le chemin complet déborde de sa ligne : `~` suffit à le rendre lisible.
     private var shortSocketPath: String {
         let raw = state.vm.dockerSocket ?? Colima.dockerSocketPath()
-        return raw
+        return
+            raw
             .replacingOccurrences(of: "unix://", with: "")
             .replacingOccurrences(of: NSHomeDirectory(), with: "~")
     }
@@ -208,12 +213,15 @@ private struct MaintenanceTab: View {
                     UsageRow(label: "Images", bytes: usage.imagesBytes)
                     UsageRow(label: "Containers", bytes: usage.containersBytes)
                     UsageRow(label: "Volumes", bytes: usage.volumesBytes)
-                    UsageRow(label: "Reclaimable", bytes: usage.reclaimableBytes, isHighlighted: true)
+                    UsageRow(
+                        label: "Reclaimable", bytes: usage.reclaimableBytes, isHighlighted: true)
                 } else {
-                    Text(state.vm.state.isUsable
-                         ? "Working it out…"
-                         : "Start Docker to find out how much space is used.")
-                        .foregroundStyle(.secondary)
+                    Text(
+                        state.vm.state.isUsable
+                            ? "Working it out…"
+                            : "Start Docker to find out how much space is used."
+                    )
+                    .foregroundStyle(.secondary)
                 }
             }
 
@@ -239,11 +247,13 @@ private struct MaintenanceTab: View {
             } header: {
                 Text("Cleaning")
             } footer: {
-                Text(pruneVolumes
-                     ? "Volumes hold your development databases. Anything not attached to a container will be lost."
-                     : "Deletes stopped containers, orphaned networks and unused images.")
-                    .font(.caption)
-                    .foregroundStyle(pruneVolumes ? Color.orange : Color.secondary)
+                Text(
+                    pruneVolumes
+                        ? "Volumes hold your development databases. Anything not attached to a container will be lost."
+                        : "Deletes stopped containers, orphaned networks and unused images."
+                )
+                .font(.caption)
+                .foregroundStyle(pruneVolumes ? Color.orange : Color.secondary)
             }
 
             Section("Log") {
@@ -259,9 +269,10 @@ private struct MaintenanceTab: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text(pruneVolumes
-                 ? "Unused images, stopped containers, networks and volumes will be deleted. This cannot be undone."
-                 : "Unused images, stopped containers and networks will be deleted.")
+            Text(
+                pruneVolumes
+                    ? "Unused images, stopped containers, networks and volumes will be deleted. This cannot be undone."
+                    : "Unused images, stopped containers and networks will be deleted.")
         }
     }
 }

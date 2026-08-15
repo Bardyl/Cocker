@@ -102,7 +102,8 @@ struct OnboardingView: View {
                     ChecklistRow(tool: tool)
                 }
 
-                if let brew = state.tools.first(where: { $0.kind == .homebrew }), !brew.isInstalled {
+                if let brew = state.tools.first(where: { $0.kind == .homebrew }), !brew.isInstalled
+                {
                     HomebrewHint()
                         .padding(.top, 8)
                 }
@@ -141,10 +142,12 @@ struct OnboardingView: View {
 
                 Toggle("Wake Docker up along with Cocker", isOn: $preferences.startVMAtLaunch)
 
-                Text("The kennel stays warm after you quit Cocker: `docker` keeps answering in your terminal until you stop it.")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(
+                    "The kennel stays warm after you quit Cocker: `docker` keeps answering in your terminal until you stop it."
+                )
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: 380)
         }
@@ -157,19 +160,23 @@ struct OnboardingView: View {
             PawTrail()
 
             VStack(spacing: 8) {
-                Text(verbatim: state.runningOperation.map {
-                    String(format: localized($0.key, locale), $0.argument ?? "")
-                } ?? localized("Cocker is busy", locale))
+                Text(
+                    verbatim: state.runningOperation.map {
+                        String(format: localized($0.key, locale), $0.argument ?? "")
+                    } ?? localized("Cocker is busy", locale)
+                )
                 .font(.title3.weight(.semibold))
 
                 RotatingPhrase(phrases: waitingPhrases)
             }
 
-            Text("Building the first kennel means downloading the VM image. A few minutes, no more.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 340)
+            Text(
+                "Building the first kennel means downloading the VM image. A few minutes, no more."
+            )
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: 340)
 
             Spacer()
         }
@@ -187,7 +194,10 @@ struct OnboardingView: View {
                     .foregroundStyle(Color.accentColor)
 
                 VStack(spacing: 6) {
-                    SummaryRow(label: "Processors", value: String(format: localized("%d cores", locale), state.vm.resources.cpus))
+                    SummaryRow(
+                        label: "Processors",
+                        value: String(
+                            format: localized("%d cores", locale), state.vm.resources.cpus))
                     SummaryRow(label: "Memory", value: "\(Int(state.vm.resources.memoryGiB)) GiB")
                     SummaryRow(label: "Disk", value: "\(state.vm.resources.diskGiB) GiB")
                 }
@@ -589,10 +599,12 @@ private struct HomebrewHint: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Homebrew is the one thing Cocker cannot fetch: installing it asks for your administrator password in a terminal.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "Homebrew is the one thing Cocker cannot fetch: installing it asks for your administrator password in a terminal."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
                 Text(Toolchain.homebrewInstallCommand)
@@ -605,7 +617,8 @@ private struct HomebrewHint: View {
 
                 Button(didCopy ? "Copied" : "Copy") {
                     NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(Toolchain.homebrewInstallCommand, forType: .string)
+                    NSPasteboard.general.setString(
+                        Toolchain.homebrewInstallCommand, forType: .string)
                     didCopy = true
                 }
                 .controlSize(.small)

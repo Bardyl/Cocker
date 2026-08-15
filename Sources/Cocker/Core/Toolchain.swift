@@ -88,7 +88,8 @@ enum Toolchain {
     ///
     /// Un lien symbolique plutôt qu'une copie : `brew upgrade` met alors le
     /// plugin à jour sans que Cocker ait à repasser derrière.
-    static func linkPlugin(_ kind: Tool.Kind, onOutput: @escaping @Sendable (String) -> Void) throws {
+    static func linkPlugin(_ kind: Tool.Kind, onOutput: @escaping @Sendable (String) -> Void) throws
+    {
         let binary = pluginBinaryName(kind)
         guard let source = pluginPath(named: binary) else {
             throw Shell.Failure(command: "link", message: "\(binary) was not found.")
@@ -104,7 +105,8 @@ enum Toolchain {
 
         // Un lien cassé ou périmé occupe la place sans rien résoudre.
         if fileManager.fileExists(atPath: destination)
-            || (try? fileManager.destinationOfSymbolicLink(atPath: destination)) != nil {
+            || (try? fileManager.destinationOfSymbolicLink(atPath: destination)) != nil
+        {
             try fileManager.removeItem(atPath: destination)
         }
 
@@ -113,10 +115,11 @@ enum Toolchain {
     }
 
     private static func firstLine(_ text: String?) -> String? {
-        guard let line = text?
-            .split(separator: "\n")
-            .map({ $0.trimmingCharacters(in: .whitespaces) })
-            .first(where: { !$0.isEmpty })
+        guard
+            let line = text?
+                .split(separator: "\n")
+                .map({ $0.trimmingCharacters(in: .whitespaces) })
+                .first(where: { !$0.isEmpty })
         else { return nil }
         return line
     }
@@ -124,7 +127,9 @@ enum Toolchain {
     // MARK: - Installation
 
     /// Installe une formule Homebrew, en diffusant sa sortie ligne par ligne.
-    static func install(_ kind: Tool.Kind, onOutput: @escaping @Sendable (String) -> Void) async throws {
+    static func install(
+        _ kind: Tool.Kind, onOutput: @escaping @Sendable (String) -> Void
+    ) async throws {
         guard let formula = kind.formula else {
             throw Shell.Failure(
                 command: "brew",

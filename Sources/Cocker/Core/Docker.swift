@@ -68,13 +68,15 @@ enum Docker {
     static func group(_ containers: [Container]) -> [ContainerGroup] {
         var byProject: [String: [Container]] = [:]
         for container in containers {
-            let key = container.project?.isEmpty == false
+            let key =
+                container.project?.isEmpty == false
                 ? container.project!
                 : ContainerGroup.looseName
             byProject[key, default: []].append(container)
         }
 
-        return byProject
+        return
+            byProject
             .map { ContainerGroup(name: $0.key, containers: $0.value) }
             .sorted { left, right in
                 // Le fourre-tout passe toujours en dernier.
@@ -99,7 +101,8 @@ enum Docker {
 
     static func perform(_ action: Action, on containerID: String) async throws {
         let docker = try binary()
-        try await Shell.runOrThrow(docker, [action.rawValue, containerID], environment: environment())
+        try await Shell.runOrThrow(
+            docker, [action.rawValue, containerID], environment: environment())
     }
 
     /// Applique une action à tout un projet Compose, en parallèle.
@@ -160,12 +163,15 @@ enum Docker {
     }
 
     /// Supprime les objets inutilisés. Destructif : l'appelant confirme.
-    static func prune(includeVolumes: Bool, onOutput: @escaping @Sendable (String) -> Void) async throws {
+    static func prune(
+        includeVolumes: Bool, onOutput: @escaping @Sendable (String) -> Void
+    ) async throws {
         let docker = try binary()
         var arguments = ["system", "prune", "--force"]
         if includeVolumes { arguments.append("--volumes") }
         onOutput("$ docker " + arguments.joined(separator: " "))
-        try await Shell.runOrThrow(docker, arguments, environment: environment(), onOutput: onOutput)
+        try await Shell.runOrThrow(
+            docker, arguments, environment: environment(), onOutput: onOutput)
     }
 }
 
@@ -290,14 +296,15 @@ enum ByteSize {
         guard let value = Double(digits) else { return 0 }
 
         let unit = trimmed.dropFirst(digits.count).trimmingCharacters(in: .whitespaces).uppercased()
-        let multiplier: Double = switch unit {
-        case "B", "": 1
-        case "KB", "KIB": 1_024
-        case "MB", "MIB": 1_048_576
-        case "GB", "GIB": 1_073_741_824
-        case "TB", "TIB": 1_099_511_627_776
-        default: 1
-        }
+        let multiplier: Double =
+            switch unit {
+            case "B", "": 1
+            case "KB", "KIB": 1_024
+            case "MB", "MIB": 1_048_576
+            case "GB", "GIB": 1_073_741_824
+            case "TB", "TIB": 1_099_511_627_776
+            default: 1
+            }
         return Int64(value * multiplier)
     }
 

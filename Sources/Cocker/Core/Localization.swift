@@ -23,7 +23,7 @@ func localized(_ key: String, _ locale: Locale) -> String {
     let fallback = Bundle.main.localizedString(forKey: key, value: key, table: nil)
 
     guard let code = locale.language.languageCode?.identifier,
-          let bundle = LocalizationBundles.shared.bundle(for: code)
+        let bundle = LocalizationBundles.shared.bundle(for: code)
     else { return fallback }
 
     return bundle.localizedString(forKey: key, value: fallback, table: nil)

@@ -82,9 +82,11 @@ final class Preferences {
         self.useRosetta = defaults.object(forKey: Key.rosetta) as? Bool ?? false
         self.startVMAtLaunch = defaults.object(forKey: Key.startVMAtLaunch) as? Bool ?? true
         self.onboardingCompleted = defaults.bool(forKey: Key.onboardingDone)
-        self.showStoppedContainers = defaults.object(forKey: Key.showStoppedContainers) as? Bool ?? true
+        self.showStoppedContainers =
+            defaults.object(forKey: Key.showStoppedContainers) as? Bool ?? true
         self.checksForUpdates = defaults.object(forKey: Key.checksForUpdates) as? Bool ?? true
-        self.language = AppLanguage(rawValue: defaults.string(forKey: Key.language) ?? "") ?? .system
+        self.language =
+            AppLanguage(rawValue: defaults.string(forKey: Key.language) ?? "") ?? .system
     }
 
     /// Aligne les préférences sur ce que la VM utilise déjà, pour ne pas

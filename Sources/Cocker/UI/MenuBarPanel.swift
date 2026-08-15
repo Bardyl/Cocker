@@ -81,12 +81,14 @@ struct MenuBarPanel: View {
             if let operation = state.runningOperation {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
-                    Text(verbatim: String(
-                        format: localized(operation.key, locale),
-                        operation.argument ?? ""
-                    ))
+                    Text(
+                        verbatim: String(
+                            format: localized(operation.key, locale),
+                            operation.argument ?? ""
+                        )
+                    )
                     .font(.caption)
-                        .foregroundStyle(.secondary)
+                    .foregroundStyle(.secondary)
                     Spacer()
                 }
             }
@@ -357,14 +359,17 @@ private struct ContainerRow: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
         .contentShape(Rectangle())
-        .background(isHovered ? Color.primary.opacity(0.06) : .clear, in: RoundedRectangle(cornerRadius: 6))
+        .background(
+            isHovered ? Color.primary.opacity(0.06) : .clear, in: RoundedRectangle(cornerRadius: 6)
+        )
         .onHover { isHovered = $0 }
     }
 
     /// Composé, donc résolu à la main : `Text` ne traduit que des littéraux.
     /// `status` vient de docker et reste tel quel, c'est sa sortie brute.
     private var subtitle: String {
-        let status = container.status.isEmpty
+        let status =
+            container.status.isEmpty
             ? localized(container.state.label, locale)
             : container.status
         return "\(container.image) · \(status)"
@@ -401,7 +406,9 @@ private struct ContainerRow: View {
     private var actions: some View {
         HStack(spacing: 6) {
             Button {
-                Task { await state.perform(container.state.isRunning ? .stop : .start, on: container) }
+                Task {
+                    await state.perform(container.state.isRunning ? .stop : .start, on: container)
+                }
             } label: {
                 Image(systemName: container.state.isRunning ? "stop.fill" : "play.fill")
             }
@@ -429,4 +436,3 @@ private struct ContainerRow: View {
         .disabled(state.isBusy)
     }
 }
-

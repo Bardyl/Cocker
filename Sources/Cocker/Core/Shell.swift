@@ -208,9 +208,12 @@ private final class LineBuffer: @unchecked Sendable {
         guard accumulated.utf8.count > Self.retentionLimit else { return }
 
         let overflow = accumulated.utf8.count - Self.retentionLimit
-        guard let start = accumulated.utf8.index(
-            accumulated.utf8.startIndex, offsetBy: overflow, limitedBy: accumulated.utf8.endIndex
-        )?.samePosition(in: accumulated) else {
+        guard
+            let start = accumulated.utf8.index(
+                accumulated.utf8.startIndex, offsetBy: overflow,
+                limitedBy: accumulated.utf8.endIndex
+            )?.samePosition(in: accumulated)
+        else {
             accumulated = ""
             return
         }

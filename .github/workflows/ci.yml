@@ -34,6 +34,11 @@ jobs:
       - name: Check translations
         run: python3 Scripts/check-translations.py
 
+      # La configuration vit dans .swift-format : 4 espaces comme Xcode,
+      # 100 colonnes. Le but est d'éviter les débats de style en revue.
+      - name: Check formatting
+        run: swift format lint --strict -r Sources Tests
+
       # Les tests ne couvrent que les parseurs ; assembler le bundle vérifie
       # que le script, l'Info.plist et la génération d'icône tiennent debout.
       - name: Assemble the app bundle

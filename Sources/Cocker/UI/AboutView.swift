@@ -41,9 +41,13 @@ struct AboutView: View {
             UpdateStatusView()
 
             HStack(spacing: 10) {
-                Link("Source code", destination: URL(string: "https://github.com/\(Updater.repository)")!)
+                Link(
+                    "Source code",
+                    destination: URL(string: "https://github.com/\(Updater.repository)")!)
                 Text("·").foregroundStyle(.tertiary)
-                Link("Report an issue", destination: URL(string: "https://github.com/\(Updater.repository)/issues")!)
+                Link(
+                    "Report an issue",
+                    destination: URL(string: "https://github.com/\(Updater.repository)/issues")!)
                 Text("·").foregroundStyle(.tertiary)
                 Link("Releases", destination: Updater.releasesURL)
             }
@@ -60,19 +64,23 @@ struct AboutView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
-            Text("Cocker drives Homebrew, colima and the Docker CLI as separate programs. "
-                 + "It does not bundle them; each keeps its own license.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "Cocker drives Homebrew, colima and the Docker CLI as separate programs. "
+                    + "It does not bundle them; each keeps its own license."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .fixedSize(horizontal: false, vertical: true)
 
             // Le nom joue avec celui de Docker : autant être explicite plutôt
             // que de laisser planer un doute sur une éventuelle affiliation.
-            Text("Not affiliated with, endorsed by, or sponsored by Docker, Inc. "
-                 + "Docker and the Docker logo are trademarks of Docker, Inc.")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "Not affiliated with, endorsed by, or sponsored by Docker, Inc. "
+                    + "Docker and the Docker logo are trademarks of Docker, Inc."
+            )
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)

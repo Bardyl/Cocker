@@ -123,9 +123,11 @@ private struct Snapshot: Decodable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        name = try container.decodeIfPresent(String.self, forKey: .name)
+        name =
+            try container.decodeIfPresent(String.self, forKey: .name)
             ?? container.decodeIfPresent(String.self, forKey: .displayName)
-        cpus = try container.decodeIfPresent(Int.self, forKey: .cpus)
+        cpus =
+            try container.decodeIfPresent(Int.self, forKey: .cpus)
             ?? container.decodeIfPresent(Int.self, forKey: .cpu)
         status = try container.decodeIfPresent(String.self, forKey: .status)
         arch = try container.decodeIfPresent(String.self, forKey: .arch)
@@ -139,11 +141,14 @@ private struct Snapshot: Decodable {
     /// colima écrit un objet JSON par ligne.
     static func decodeAll(_ text: String) -> [Snapshot] {
         let decoder = JSONDecoder()
-        return text
+        return
+            text
             .split(separator: "\n")
             .compactMap { line in
                 let trimmed = line.trimmingCharacters(in: .whitespaces)
-                guard trimmed.hasPrefix("{"), let data = trimmed.data(using: .utf8) else { return nil }
+                guard trimmed.hasPrefix("{"), let data = trimmed.data(using: .utf8) else {
+                    return nil
+                }
                 return try? decoder.decode(Snapshot.self, from: data)
             }
     }

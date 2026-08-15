@@ -66,9 +66,24 @@ Describe the effect, not the gesture: *fix path re-reading* rather than *modify
 ProjectStore*. Explain **why** in the body; the diff already says what. One intent
 per commit — a formatting pass and a behaviour change do not travel together.
 
+## Style
+
+Formatting is settled by `swift-format`, configured in `.swift-format`: four
+spaces like Xcode, 100 columns. Run it before opening a pull request; CI checks
+it in strict mode.
+
+```sh
+swift format --in-place -r Sources Tests
+```
+
+The point is not the style itself, it is that nobody has to argue about it in
+review.
+
 ## Before opening a pull request
 
 - `swift test` passes.
 - `swift build` produces no warnings.
+- `swift format lint --strict -r Sources Tests` is clean.
+- `python3 Scripts/check-translations.py` is clean.
 - You have actually run the app, not only compiled it. Several bugs in this project
   looked fine in the code and only showed up on screen.

@@ -71,8 +71,8 @@ struct Tool: Identifiable, Hashable, Sendable {
 /// État de la VM colima.
 enum VMState: Equatable, Sendable {
     case unknown
-    case missing        // colima n'est pas installé
-    case notCreated     // installé, mais aucun profil n'existe encore
+    case missing  // colima n'est pas installé
+    case notCreated  // installé, mais aucun profil n'existe encore
     case stopped
     case starting
     case running
