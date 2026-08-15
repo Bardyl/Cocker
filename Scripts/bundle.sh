@@ -36,6 +36,14 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/Cocker"
 cp "$ROOT/Resources/Info.plist" "$APP/Contents/Info.plist"
 cp "$ICON" "$APP/Contents/Resources/Cocker.icns"
+
+# Les traductions vont directement dans le bundle plutôt que d'être déclarées
+# comme ressources SwiftPM : `Text("…")` cherche dans Bundle.main, pas dans
+# Bundle.module, et c'est Bundle.main qui compte une fois l'app assemblée.
+for lproj in "$ROOT"/Resources/*.lproj; do
+	[[ -d "$lproj" ]] || continue
+	cp -R "$lproj" "$APP/Contents/Resources/"
+done
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
 # Signature.

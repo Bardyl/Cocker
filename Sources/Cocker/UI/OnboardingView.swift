@@ -9,6 +9,7 @@ import SwiftUI
 struct OnboardingView: View {
     @Environment(AppState.self) private var state
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
 
     @State private var step: Step = .welcome
     @State private var failure: String?
@@ -73,8 +74,8 @@ struct OnboardingView: View {
 
     private var welcomeScreen: some View {
         ScreenLayout(
-            title: "Cocker, à ton service",
-            subtitle: "Il va chercher Docker, le rapporte, et le garde au chaud."
+            title: "Cocker, at your service",
+            subtitle: "He fetches Docker, brings it back, and keeps it warm."
         ) {
             VStack(spacing: 18) {
                 Image(nsImage: NSApplication.shared.applicationIconImage)
@@ -82,10 +83,10 @@ struct OnboardingView: View {
                     .frame(width: 128, height: 128)
 
                 VStack(alignment: .leading, spacing: 10) {
-                    Bullet("Il installe colima et les outils docker.")
-                    Bullet("Il monte la garde dans la barre de menus.")
-                    Bullet("Il range tes conteneurs par projet.")
-                    Bullet("Plus besoin de Docker Desktop.")
+                    Bullet("He installs colima and the docker tools.")
+                    Bullet("He stands guard in the menu bar.")
+                    Bullet("He sorts your containers by project.")
+                    Bullet("No more Docker Desktop.")
                 }
             }
         }
@@ -93,8 +94,8 @@ struct OnboardingView: View {
 
     private var toolsScreen: some View {
         ScreenLayout(
-            title: "Au pied !",
-            subtitle: "Cocker flaire ce qu'il a déjà dans sa gamelle."
+            title: "Fetch!",
+            subtitle: "Cocker is sniffing out what's already in his bowl."
         ) {
             VStack(spacing: 8) {
                 ForEach(state.tools) { tool in
@@ -113,8 +114,8 @@ struct OnboardingView: View {
         @Bindable var preferences = state.preferences
 
         return ScreenLayout(
-            title: "La gamelle",
-            subtitle: "Combien tu le laisses grignoter sur ta machine ?"
+            title: "The food bowl",
+            subtitle: "How much of your Mac is he allowed to chew on?"
         ) {
             VStack(alignment: .leading, spacing: 14) {
                 ResourceControls(resources: $preferences.desiredResources)
@@ -132,16 +133,15 @@ struct OnboardingView: View {
         @Bindable var preferences = state.preferences
 
         return ScreenLayout(
-            title: "La niche",
-            subtitle: "Quand est-ce qu'il prend son poste ?"
+            title: "The kennel",
+            subtitle: "When does he take up his post?"
         ) {
             VStack(alignment: .leading, spacing: 14) {
                 LoginItemToggle()
 
-                Toggle("Réveiller Docker en même temps que Cocker", isOn: $preferences.startVMAtLaunch)
+                Toggle("Wake Docker up along with Cocker", isOn: $preferences.startVMAtLaunch)
 
-                Text("La niche reste chaude quand tu quittes Cocker : `docker` continue "
-                     + "de répondre dans le terminal jusqu'à ce que tu l'arrêtes.")
+                Text("The kennel stays warm after you quit Cocker: `docker` keeps answering in your terminal until you stop it.")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -157,14 +157,15 @@ struct OnboardingView: View {
             PawTrail()
 
             VStack(spacing: 8) {
-                Text(state.runningOperation ?? "Cocker s'active")
-                    .font(.title3.weight(.semibold))
+                Text(verbatim: state.runningOperation.map {
+                    String(format: localized($0.key, locale), $0.argument ?? "")
+                } ?? localized("Cocker is busy", locale))
+                .font(.title3.weight(.semibold))
 
                 RotatingPhrase(phrases: waitingPhrases)
             }
 
-            Text("La première niche demande de télécharger l'image de la VM. "
-                 + "Quelques minutes, pas plus.")
+            Text("Building the first kennel means downloading the VM image. A few minutes, no more.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
@@ -177,8 +178,8 @@ struct OnboardingView: View {
 
     private var doneScreen: some View {
         ScreenLayout(
-            title: "Bon chien 🦴",
-            subtitle: "Cocker monte la garde. Tu peux fermer cette fenêtre."
+            title: "Good boy 🦴",
+            subtitle: "Cocker is on guard. You can close this window."
         ) {
             VStack(spacing: 14) {
                 Image(systemName: "pawprint.fill")
@@ -186,13 +187,13 @@ struct OnboardingView: View {
                     .foregroundStyle(Color.accentColor)
 
                 VStack(spacing: 6) {
-                    SummaryRow(label: "Processeurs", value: "\(state.vm.resources.cpus) cœurs")
-                    SummaryRow(label: "Mémoire", value: "\(Int(state.vm.resources.memoryGiB)) Gio")
-                    SummaryRow(label: "Disque", value: "\(state.vm.resources.diskGiB) Gio")
+                    SummaryRow(label: "Processors", value: String(format: localized("%d cores", locale), state.vm.resources.cpus))
+                    SummaryRow(label: "Memory", value: "\(Int(state.vm.resources.memoryGiB)) GiB")
+                    SummaryRow(label: "Disk", value: "\(state.vm.resources.diskGiB) GiB")
                 }
                 .frame(maxWidth: 280)
 
-                Text("`docker` répond maintenant dans ton terminal.")
+                Text("`docker` now answers in your terminal.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -210,7 +211,7 @@ struct OnboardingView: View {
                     .font(.system(size: 42))
                     .foregroundStyle(.orange)
 
-                Text(DogTalk.Label.lostBall)
+                Text(key: DogTalk.Label.lostBall)
                     .font(.title2.weight(.semibold))
 
                 Text(message)
@@ -222,7 +223,7 @@ struct OnboardingView: View {
                     .background(Color.orange.opacity(0.10), in: RoundedRectangle(cornerRadius: 8))
 
                 if isShowingLog {
-                    LogConsole(lines: state.log, emptyMessage: "Rien dans le journal.")
+                    LogConsole(lines: state.log, emptyMessage: "Nothing in the log.")
                         .frame(height: 150)
                         .frame(maxWidth: 440)
                 }
@@ -234,18 +235,18 @@ struct OnboardingView: View {
             Divider()
 
             HStack {
-                Button(isShowingLog ? "Masquer le détail" : "Voir le détail") {
+                Button(isShowingLog ? "Hide the detail" : "Show the detail") {
                     withAnimation { isShowingLog.toggle() }
                 }
 
                 Spacer()
 
-                Button("Passer cette étape") {
+                Button("Skip this step") {
                     failure = nil
                     skip()
                 }
 
-                Button("Relancer la balle") {
+                Button("Throw the ball again") {
                     failure = nil
                     Task { await advance() }
                 }
@@ -261,7 +262,7 @@ struct OnboardingView: View {
     private var footer: some View {
         HStack {
             if canGoBack {
-                Button("Retour") { step = previousStep }
+                Button("Back") { step = previousStep }
                     .controlSize(.large)
                     .disabled(state.isBusy)
             }
@@ -294,22 +295,22 @@ struct OnboardingView: View {
         Step(rawValue: max(0, step.rawValue - 1)) ?? .welcome
     }
 
-    private var primaryTitle: String {
+    private var primaryTitle: LocalizedStringKey {
         switch step {
         case .welcome:
-            "Allez, viens !"
+            "Come on, then!"
         case .tools:
-            state.hasToolWork ? "Va chercher !" : "Rien à rapporter, on continue"
+            state.hasToolWork ? "Go fetch!" : "Nothing to fetch, carry on"
         case .resources:
-            "C'est noté"
+            "Noted"
         case .kennel:
             state.vm.state.isUsable
-                ? "Il est déjà debout, terminer"
-                : (state.vm.state == .notCreated ? "Construire la niche" : "Réveiller Cocker")
+                ? "He's already up, finish"
+                : (state.vm.state == .notCreated ? "Build the kennel" : "Wake Cocker up")
         case .working:
-            "Patiente…"
+            "Hold on…"
         case .done:
-            "Terminer"
+            "Finish"
         }
     }
 
@@ -384,8 +385,8 @@ struct OnboardingView: View {
 
 /// Le gabarit commun : un titre, une phrase, un contenu centré.
 private struct ScreenLayout<Content: View>: View {
-    var title: String
-    var subtitle: String
+    var title: LocalizedStringKey
+    var subtitle: LocalizedStringKey
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -513,7 +514,7 @@ private struct Bullet: View {
 }
 
 private struct SummaryRow: View {
-    var label: String
+    var label: LocalizedStringKey
     var value: String
 
     var body: some View {
@@ -540,9 +541,9 @@ private struct ChecklistRow: View {
                 .frame(width: 18)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(tool.kind.displayName)
+                Text(verbatim: tool.kind.displayName)
                     .font(.callout.weight(.medium))
-                Text(detail)
+                Text(key: detail)
                     .font(.caption)
                     .foregroundStyle(tool.needsLinking ? Color.orange : Color.secondary)
                     .lineLimit(1)
@@ -550,7 +551,7 @@ private struct ChecklistRow: View {
 
             Spacer()
 
-            Text(status)
+            Text(key: status)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
@@ -571,14 +572,14 @@ private struct ChecklistRow: View {
     }
 
     private var detail: String {
-        if tool.needsLinking { return "Installé, mais docker ne le trouve pas." }
+        if tool.needsLinking { return "Installed, but docker cannot find it." }
         return tool.version ?? tool.kind.summary
     }
 
     private var status: String {
-        if tool.needsLinking { return "à ranger" }
-        if tool.isInstalled { return "dans la gamelle" }
-        return tool.kind.isRequired ? "à rapporter" : "optionnel"
+        if tool.needsLinking { return "to put away" }
+        if tool.isInstalled { return "in the bowl" }
+        return tool.kind.isRequired ? "to fetch" : "optional"
     }
 }
 
@@ -588,8 +589,7 @@ private struct HomebrewHint: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Homebrew, Cocker ne sait pas le rapporter : son installation réclame "
-                 + "ton mot de passe administrateur dans un terminal.")
+            Text("Homebrew is the one thing Cocker cannot fetch: installing it asks for your administrator password in a terminal.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -603,7 +603,7 @@ private struct HomebrewHint: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
 
-                Button(didCopy ? "Copié" : "Copier") {
+                Button(didCopy ? "Copied" : "Copy") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(Toolchain.homebrewInstallCommand, forType: .string)
                     didCopy = true

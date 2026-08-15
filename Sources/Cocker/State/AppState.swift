@@ -17,7 +17,20 @@ final class AppState {
 
     /// Opération longue en cours (démarrage, installation…). Non nil = l'UI
     /// verrouille les boutons qui pourraient entrer en conflit.
-    private(set) var runningOperation: String?
+    ///
+    /// On garde la clé de traduction et son argument plutôt que le texte
+    /// final : la langue peut changer pendant l'opération.
+    struct Operation: Equatable, Sendable {
+        var key: String
+        var argument: String?
+
+        init(_ key: String, _ argument: String? = nil) {
+            self.key = key
+            self.argument = argument
+        }
+    }
+
+    private(set) var runningOperation: Operation?
     private(set) var lastError: String?
     private(set) var log: [LogLine] = []
 
@@ -211,9 +224,9 @@ final class AppState {
     // MARK: - Actions
 
     /// Enveloppe commune : marque l'opération, capture l'erreur, rafraîchit.
-    private func perform(_ title: String, _ body: () async throws -> Void) async {
+    private func perform(_ operation: Operation, _ body: () async throws -> Void) async {
         guard runningOperation == nil else { return }
-        runningOperation = title
+        runningOperation = operation
         lastError = nil
         defer { runningOperation = nil }
 
@@ -238,7 +251,7 @@ final class AppState {
     }
 
     func startVM() async {
-        await perform(DogTalk.Operation.start) {
+        await perform(Operation(DogTalk.Operation.start)) {
             vm.state = .starting
             try await Colima.start(
                 resources: preferences.desiredResources,
@@ -249,7 +262,7 @@ final class AppState {
     }
 
     func stopVM() async {
-        await perform(DogTalk.Operation.stop) {
+        await perform(Operation(DogTalk.Operation.stop)) {
             vm.state = .stopping
             try await Colima.stop(onOutput: logCollector())
         }
@@ -265,8 +278,8 @@ final class AppState {
 
     /// Applique de nouvelles ressources : colima exige un cycle complet.
     func applyResources() async {
-        await perform(DogTalk.Operation.resize) {
-            appendLog("Redémarrage de la VM pour appliquer les nouvelles ressources.")
+        await perform(Operation(DogTalk.Operation.resize)) {
+            appendLog("Restarting the VM to apply the new resources.")
             try await Colima.restart(
                 resources: preferences.desiredResources,
                 useRosetta: preferences.useRosetta,
@@ -276,13 +289,13 @@ final class AppState {
     }
 
     func install(_ kind: Tool.Kind) async {
-        await perform(DogTalk.Operation.install(kind.displayName)) {
+        await perform(Operation(DogTalk.Operation.installOne, kind.displayName)) {
             try await Toolchain.install(kind, onOutput: logCollector())
         }
     }
 
     func link(_ kind: Tool.Kind) async {
-        await perform(DogTalk.Operation.link(kind.displayName)) {
+        await perform(Operation(DogTalk.Operation.linkOne, kind.displayName)) {
             try Toolchain.linkPlugin(kind, onOutput: logCollector())
         }
     }
@@ -294,7 +307,7 @@ final class AppState {
             .filter { $0.formula != nil }
         let toLink = unlinkedTools.map(\.kind)
 
-        await perform(DogTalk.Operation.installAll) {
+        await perform(Operation(DogTalk.Operation.installAll)) {
             for kind in toInstall {
                 try await Toolchain.install(kind, onOutput: logCollector())
             }
@@ -305,13 +318,13 @@ final class AppState {
     }
 
     func perform(_ action: Docker.Action, on container: Container) async {
-        await perform("\(action.label) \(container.displayName)") {
+        await perform(Operation(action.label + " %@", container.displayName)) {
             try await Docker.perform(action, on: container.id)
         }
     }
 
     func perform(_ action: Docker.Action, on group: ContainerGroup) async {
-        await perform("\(action.label) \(group.name)") {
+        await perform(Operation(action.label + " %@", group.displayName)) {
             try await Docker.perform(action, on: group)
         }
     }
@@ -325,7 +338,7 @@ final class AppState {
     }
 
     func prune(includeVolumes: Bool) async {
-        await perform(DogTalk.Operation.cleaning) {
+        await perform(Operation(DogTalk.Operation.cleaning)) {
             try await Docker.prune(includeVolumes: includeVolumes, onOutput: logCollector())
         }
     }

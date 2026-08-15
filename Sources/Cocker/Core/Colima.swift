@@ -7,7 +7,7 @@ enum Colima {
 
     private static func binary() throws -> String {
         guard let path = Shell.which("colima") else {
-            throw Shell.Failure(command: "colima", message: "Colima n'est pas installé.")
+            throw Shell.Failure(command: "colima", message: "Colima is not installed.")
         }
         return path
     }

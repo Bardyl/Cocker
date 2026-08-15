@@ -1,0 +1,212 @@
+/* Cocker — traduction française.
+   Les clés sont les chaînes anglaises. Le ton canin ne se traduit pas mot à
+   mot, il se réécrit : certaines tournures diffèrent volontairement. */
+
+/* --- Outils --- */
+"The package manager that installs everything else." = "Le gestionnaire de paquets qui installe tout le reste.";
+"The virtual machine that runs the Docker engine." = "La machine virtuelle qui fait tourner le moteur Docker.";
+"The `docker` command you use every day." = "La commande `docker` que tu utilises au quotidien.";
+"Runs multi-container stacks described in YAML." = "Lance des piles multi-conteneurs décrites en YAML.";
+"Modern build engine, required by most images." = "Moteur de build moderne, requis par la plupart des images.";
+
+/* --- États --- */
+"Checking…" = "Vérification…";
+"Not installed" = "Non installé";
+"Never started" = "Jamais démarré";
+"Stopped" = "Arrêté";
+"Starting…" = "Démarrage…";
+"Running" = "En marche";
+"Stopping…" = "Arrêt…";
+"Created" = "Créé";
+"Restarting" = "Redémarre";
+"Removing" = "Suppression";
+"Paused" = "En pause";
+"Dead" = "Mort";
+"Unknown" = "Inconnu";
+"No project" = "Sans projet";
+
+/* --- Actions --- */
+"Start" = "Démarrer";
+"Stop" = "Arrêter";
+"Restart" = "Redémarrer";
+"Start %@" = "Démarrage de %@";
+"Stop %@" = "Arrêt de %@";
+"Restart %@" = "Redémarrage de %@";
+
+/* --- Attentes canines --- */
+"He's sniffing out the Homebrew formulas…" = "Il renifle les formules Homebrew…";
+"He's fetching colima…" = "Il rapporte colima…";
+"He's shaking off the dust…" = "Il secoue la poussière…";
+"He's chewing through the packages…" = "Il mâchouille les paquets…";
+"He drops the ball, picks it straight back up…" = "Il lâche la balle, la reprend aussitôt…";
+"He knocked something over. We'll say nothing…" = "Il fait tomber quelque chose, on ne dira rien…";
+"He's digging a hole for the kennel…" = "Il creuse un trou pour la niche…";
+"He's turning around three times before lying down…" = "Il tourne trois fois avant de se coucher…";
+"He's gnawing on the disk image…" = "Il mâchouille l'image disque…";
+"He's patting down the straw…" = "Il tasse bien la paille…";
+"He's checking there's no cat around…" = "Il vérifie qu'il n'y a pas de chat dans le coin…";
+"He's burying a bone for later…" = "Il enterre un os pour plus tard…";
+"He's waking up…" = "Il se réveille…";
+"He's having a long stretch…" = "Il s'étire longuement…";
+"He's wagging his tail…" = "Il agite la queue…";
+"He's trotting over…" = "Il vient en trottinant…";
+"He's heading back to his basket…" = "Il rentre au panier…";
+"He's doing his three turns…" = "Il fait ses trois tours…";
+"He's resting his head on his paws…" = "Il pose la tête sur ses pattes…";
+"He's digging up the old bones…" = "Il déterre les vieux os…";
+"He's sorting through his toys…" = "Il fait le tri dans ses jouets…";
+"He's shaking out the basket…" = "Il secoue le panier…";
+
+/* --- Étiquettes canines --- */
+"Cocker is napping" = "Cocker fait la sieste";
+"Cocker is on guard" = "Cocker monte la garde";
+"The kennel is empty" = "La niche est vide";
+"Cocker isn't trained yet" = "Cocker n'est pas encore dressé";
+"He lost the ball" = "Il a perdu la balle";
+"Cocker is waking up" = "Cocker se réveille";
+"Cocker is going back to his basket" = "Cocker rentre au panier";
+"Cocker is rebuilding his kennel" = "Cocker refait sa niche";
+"Cocker is tidying up" = "Cocker fait le ménage";
+"Cocker is doing his rounds" = "Cocker fait sa tournée";
+"Cocker is fetching %@" = "Cocker va chercher %@";
+"Cocker is putting away %@" = "Cocker range %@";
+"Cocker is busy" = "Cocker s'active";
+
+/* --- Panneau --- */
+"Processor" = "Processeur";
+"Memory" = "Mémoire";
+"Disk" = "Disque";
+"cores" = "cœurs";
+"GiB" = "Gio";
+"GiB allocated" = "Gio alloués";
+"GiB / %lld" = "Gio / %lld";
+"Back to the basket" = "Au panier";
+"Wake Cocker up" = "Réveiller Cocker";
+"Train him" = "Le dresser";
+"Wake him up to see your containers again." = "Réveille-le pour retrouver tes conteneurs.";
+"Start a stack with `docker compose up` and Cocker will watch it here." = "Lance une pile avec `docker compose up` : Cocker la gardera ici.";
+"Nothing running. Stopped containers are hidden." = "Rien en marche. Les conteneurs arrêtés sont masqués.";
+"Only the Docker virtual machine is left to create." = "Il ne reste qu'à créer la machine virtuelle Docker.";
+"Missing: %@" = "Il manque : %@";
+"%lld on watch" = "%lld sous surveillance";
+"Settings" = "Réglages";
+"Resources, startup, housekeeping" = "Ressources, démarrage, entretien";
+"Setup assistant…" = "Assistant de configuration…";
+"Refresh now" = "Rafraîchir maintenant";
+"About Cocker" = "À propos de Cocker";
+"Quit Cocker" = "Quitter Cocker";
+"Stop the project" = "Arrêter le projet";
+"Start the project" = "Démarrer le projet";
+"View logs" = "Voir les logs";
+"Open http://localhost:%lld" = "Ouvrir http://localhost:%lld";
+"Nothing to show yet." = "Rien à afficher pour l'instant.";
+
+/* --- Assistant --- */
+"Cocker, at your service" = "Cocker, à ton service";
+"He fetches Docker, brings it back, and keeps it warm." = "Il va chercher Docker, le rapporte, et le garde au chaud.";
+"He installs colima and the docker tools." = "Il installe colima et les outils docker.";
+"He stands guard in the menu bar." = "Il monte la garde dans la barre de menus.";
+"He sorts your containers by project." = "Il range tes conteneurs par projet.";
+"No more Docker Desktop." = "Plus besoin de Docker Desktop.";
+"Fetch!" = "Au pied !";
+"Cocker is sniffing out what's already in his bowl." = "Cocker flaire ce qu'il a déjà dans sa gamelle.";
+"The food bowl" = "La gamelle";
+"How much of your Mac is he allowed to chew on?" = "Combien tu le laisses grignoter sur ta machine ?";
+"The kennel" = "La niche";
+"When does he take up his post?" = "Quand est-ce qu'il prend son poste ?";
+"Wake Docker up along with Cocker" = "Réveiller Docker en même temps que Cocker";
+"The kennel stays warm after you quit Cocker: `docker` keeps answering in your terminal until you stop it." = "La niche reste chaude quand tu quittes Cocker : `docker` continue de répondre dans le terminal jusqu'à ce que tu l'arrêtes.";
+"Building the first kennel means downloading the VM image. A few minutes, no more." = "La première niche demande de télécharger l'image de la VM. Quelques minutes, pas plus.";
+"Good boy 🦴" = "Bon chien 🦴";
+"Cocker is on guard. You can close this window." = "Cocker monte la garde. Tu peux fermer cette fenêtre.";
+"Processors" = "Processeurs";
+"%d cores" = "%d cœurs";
+"`docker` now answers in your terminal." = "`docker` répond maintenant dans ton terminal.";
+"Nothing in the log." = "Rien dans le journal.";
+"Hide the detail" = "Masquer le détail";
+"Show the detail" = "Voir le détail";
+"Skip this step" = "Passer cette étape";
+"Throw the ball again" = "Relancer la balle";
+"Back" = "Retour";
+"Come on, then!" = "Allez, viens !";
+"Go fetch!" = "Va chercher !";
+"Nothing to fetch, carry on" = "Rien à rapporter, on continue";
+"Noted" = "C'est noté";
+"He's already up, finish" = "Il est déjà debout, terminer";
+"Build the kennel" = "Construire la niche";
+"Hold on…" = "Patiente…";
+"Finish" = "Terminer";
+"Installed, but docker cannot find it." = "Installé, mais docker ne le trouve pas.";
+"to put away" = "à ranger";
+"in the bowl" = "dans la gamelle";
+"to fetch" = "à rapporter";
+"optional" = "optionnel";
+"Homebrew is the one thing Cocker cannot fetch: installing it asks for your administrator password in a terminal." = "Homebrew, Cocker ne sait pas le rapporter : son installation réclame ton mot de passe administrateur dans un terminal.";
+"Copied" = "Copié";
+"Copy" = "Copier";
+
+/* --- Réglages --- */
+"Resources" = "Ressources";
+"General" = "Général";
+"Housekeeping" = "Entretien";
+"What the virtual machine takes from your Mac" = "Ce que la machine virtuelle prend à ton Mac";
+"Disk can only grow: colima refuses to shrink one on an existing VM." = "Le disque ne peut qu'augmenter : colima refuse de le réduire sur une VM existante.";
+"x86 emulation through Rosetta" = "Émulation x86 par Rosetta";
+"Speeds up amd64 images considerably on Apple Silicon." = "Accélère nettement les images amd64 sur Apple Silicon.";
+"The VM does not exist yet: these values will be used to create it." = "La VM n'existe pas encore : ces valeurs serviront à sa création.";
+"These settings match the running VM." = "Ces réglages sont ceux de la VM en cours.";
+"Applying restarts the VM: running containers will stop." = "Appliquer redémarre la VM : les conteneurs en marche s'arrêteront.";
+"Discard the changes" = "Annuler les changements";
+"Apply and restart" = "Appliquer et redémarrer";
+"Launch Cocker at login" = "Lancer Cocker à l'ouverture de session";
+"Allow in System Settings…" = "Autoriser dans les Réglages Système…";
+"Start Docker when Cocker launches" = "Démarrer Docker à l'ouverture de Cocker";
+"Startup" = "Démarrage";
+"The colima VM keeps running after you quit Cocker: `docker` stays usable in your terminal." = "La VM colima continue de tourner après avoir quitté Cocker : `docker` reste utilisable dans le terminal.";
+"Display" = "Affichage";
+"Language" = "Langue";
+"Automatic" = "Automatique";
+"The change applies straight away, no restart needed." = "Le changement s'applique aussitôt, sans relancer l'app.";
+"Show stopped containers" = "Afficher les conteneurs arrêtés";
+"Check for updates at launch" = "Vérifier les mises à jour au lancement";
+"One request a day to the GitHub API, and nothing else: Cocker makes no other network call." = "Une requête par jour vers l'API GitHub, et rien d'autre : Cocker n'émet aucun autre appel réseau.";
+"Virtual machine" = "Machine virtuelle";
+"State" = "État";
+"Architecture" = "Architecture";
+"Engine" = "Moteur";
+"Docker socket" = "Socket Docker";
+"Reopen the setup assistant…" = "Rouvrir l'assistant de configuration…";
+"Space used" = "Espace occupé";
+"Images" = "Images";
+"Containers" = "Conteneurs";
+"Volumes" = "Volumes";
+"Reclaimable" = "Récupérable";
+"Working it out…" = "Calcul en cours…";
+"Start Docker to find out how much space is used." = "Démarre Docker pour connaître l'espace occupé.";
+"Also delete unused volumes" = "Supprimer aussi les volumes inutilisés";
+"Clean up…" = "Nettoyer…";
+"Clean up" = "Nettoyer";
+"Cancel" = "Annuler";
+"Refresh" = "Rafraîchir";
+"Cleaning" = "Nettoyage";
+"Volumes hold your development databases. Anything not attached to a container will be lost." = "Les volumes contiennent tes bases de données de développement. Ce qui n'est rattaché à aucun conteneur sera perdu.";
+"Deletes stopped containers, orphaned networks and unused images." = "Supprime les conteneurs arrêtés, les réseaux orphelins et les images inutilisées.";
+"Log" = "Journal";
+"No recent operation." = "Aucune opération récente.";
+"Clean up Docker?" = "Nettoyer Docker ?";
+"Unused images, stopped containers, networks and volumes will be deleted. This cannot be undone." = "Les images, conteneurs arrêtés, réseaux et volumes inutilisés seront supprimés. C'est irréversible.";
+"Unused images, stopped containers and networks will be deleted." = "Les images, conteneurs arrêtés et réseaux inutilisés seront supprimés.";
+"Restarting the VM to apply the new resources." = "Redémarrage de la VM pour appliquer les nouvelles ressources.";
+
+/* --- Logs --- */
+"Follow" = "Suivre";
+"Copy the logs" = "Copier les logs";
+"Container not found" = "Conteneur introuvable";
+"No output." = "Aucune sortie.";
+
+/* --- À propos : le texte légal reste en anglais, seul l'entour suit la langue. --- */
+"Check for updates" = "Vérifier les mises à jour";
+"You're up to date" = "Tu es à jour";
+"Version %@ is available" = "La version %@ est disponible";
+"Source code" = "Code source";
+"Report an issue" = "Signaler un problème";

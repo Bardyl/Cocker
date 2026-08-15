@@ -91,7 +91,7 @@ enum Toolchain {
     static func linkPlugin(_ kind: Tool.Kind, onOutput: @escaping @Sendable (String) -> Void) throws {
         let binary = pluginBinaryName(kind)
         guard let source = pluginPath(named: binary) else {
-            throw Shell.Failure(command: "link", message: "\(binary) est introuvable.")
+            throw Shell.Failure(command: "link", message: "\(binary) was not found.")
         }
 
         let fileManager = FileManager.default
@@ -128,13 +128,13 @@ enum Toolchain {
         guard let formula = kind.formula else {
             throw Shell.Failure(
                 command: "brew",
-                message: "Homebrew ne peut pas s'installer lui-même depuis Cocker."
+                message: "Homebrew cannot install itself from Cocker."
             )
         }
         guard let brew = Shell.which("brew") else {
             throw Shell.Failure(
                 command: "brew",
-                message: "Homebrew est introuvable. Installe-le d'abord depuis brew.sh."
+                message: "Homebrew was not found. Install it from brew.sh first."
             )
         }
 

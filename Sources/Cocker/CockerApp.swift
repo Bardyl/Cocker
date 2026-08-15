@@ -16,6 +16,7 @@ struct CockerApp: App {
         MenuBarExtra {
             MenuBarPanel()
                 .environment(state)
+                .environment(\.locale, state.preferences.language.locale)
         } label: {
             MenuBarLabel(state: state)
         }
@@ -24,6 +25,7 @@ struct CockerApp: App {
         Window("Dressage de Cocker", id: WindowID.onboarding) {
             OnboardingView()
                 .environment(state)
+                .environment(\.locale, state.preferences.language.locale)
         }
         .windowResizability(.contentSize)
         .defaultPosition(.center)
@@ -33,11 +35,13 @@ struct CockerApp: App {
         Settings {
             SettingsView()
                 .environment(state)
+                .environment(\.locale, state.preferences.language.locale)
         }
 
         Window("About Cocker", id: WindowID.about) {
             AboutView()
                 .environment(state)
+                .environment(\.locale, state.preferences.language.locale)
         }
         .windowResizability(.contentSize)
         .defaultPosition(.center)
@@ -45,6 +49,7 @@ struct CockerApp: App {
         WindowGroup("Logs", id: WindowID.logs, for: String.self) { $containerID in
             LogsView(containerID: containerID)
                 .environment(state)
+                .environment(\.locale, state.preferences.language.locale)
         }
         .defaultSize(width: 720, height: 460)
     }

@@ -19,6 +19,7 @@ final class Preferences {
         static let onboardingDone = "app.onboardingCompleted"
         static let showStoppedContainers = "ui.showStoppedContainers"
         static let checksForUpdates = "updates.enabled"
+        static let language = "ui.language"
     }
 
     private let defaults: UserDefaults
@@ -56,6 +57,19 @@ final class Preferences {
         didSet { defaults.set(checksForUpdates, forKey: Key.checksForUpdates) }
     }
 
+    /// Langue de l'interface. Écrire aussi `AppleLanguages` sert aux chaînes
+    /// résolues hors d'une vue, que l'environnement SwiftUI n'atteint pas.
+    var language: AppLanguage {
+        didSet {
+            defaults.set(language.rawValue, forKey: Key.language)
+            if let codes = language.preferredLanguages {
+                defaults.set(codes, forKey: "AppleLanguages")
+            } else {
+                defaults.removeObject(forKey: "AppleLanguages")
+            }
+        }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
 
@@ -70,6 +84,7 @@ final class Preferences {
         self.onboardingCompleted = defaults.bool(forKey: Key.onboardingDone)
         self.showStoppedContainers = defaults.object(forKey: Key.showStoppedContainers) as? Bool ?? true
         self.checksForUpdates = defaults.object(forKey: Key.checksForUpdates) as? Bool ?? true
+        self.language = AppLanguage(rawValue: defaults.string(forKey: Key.language) ?? "") ?? .system
     }
 
     /// Aligne les préférences sur ce que la VM utilise déjà, pour ne pas

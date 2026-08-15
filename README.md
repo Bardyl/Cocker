@@ -8,8 +8,9 @@ project, and lets you decide how much of your Mac Docker is allowed to eat.
 
 It lives in the menu bar and nowhere else. There is no Dock icon.
 
-> The interface is currently in French. Everything else — code comments aside —
-> is in English. Translation is welcome; see [Contributing](CONTRIBUTING.md).
+> Available in English and French. Cocker follows your system language by
+> default, and Settings → General lets you force either one — the change
+> applies immediately, no restart.
 
 <p align="center">
   <img src="docs/screenshots/panel.png" width="380" alt="The menu bar panel, showing containers grouped by Compose project">

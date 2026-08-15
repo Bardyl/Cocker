@@ -31,6 +31,9 @@ jobs:
       - name: Test
         run: swift test
 
+      - name: Check translations
+        run: python3 Scripts/check-translations.py
+
       # Les tests ne couvrent que les parseurs ; assembler le bundle vérifie
       # que le script, l'Info.plist et la génération d'icône tiennent debout.
       - name: Assemble the app bundle

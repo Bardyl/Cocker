@@ -8,8 +8,9 @@ import SwiftUI
 struct ResourceControls: View {
     @Binding var resources: VMResources
 
-    static let diskCaveat = "Le disque ne peut qu'augmenter : colima refuse de le réduire "
-        + "sur une VM existante."
+    static let diskCaveat = LocalizedStringKey(
+        "Disk can only grow: colima refuses to shrink one on an existing VM."
+    )
 
     /// Un `Group` et non un `VStack` : dans un `Form`, chaque `LabeledContent`
     /// devient une vraie ligne et s'aligne sur la colonne de contenu ; ailleurs,
@@ -17,42 +18,42 @@ struct ResourceControls: View {
     var body: some View {
         Group {
             slider(
-                label: "Processeurs",
+                label: "Processors",
                 value: Binding(
                     get: { Double(resources.cpus) },
                     set: { resources.cpus = Int($0.rounded()) }
                 ),
                 range: 1...Double(Preferences.maxCPUs),
-                display: "\(resources.cpus) sur \(Preferences.maxCPUs)"
+                display: "\(resources.cpus) / \(Preferences.maxCPUs)"
             )
 
             slider(
-                label: "Mémoire",
+                label: "Memory",
                 value: Binding(
                     get: { resources.memoryGiB },
                     set: { resources.memoryGiB = $0.rounded() }
                 ),
                 range: 1...Preferences.maxMemoryGiB,
-                display: "\(Int(resources.memoryGiB)) Gio"
+                display: "\(Int(resources.memoryGiB)) GiB"
             )
 
             slider(
-                label: "Disque",
+                label: "Disk",
                 value: Binding(
                     get: { Double(resources.diskGiB) },
                     set: { resources.diskGiB = Int(($0 / 10).rounded()) * 10 }
                 ),
                 range: 20...400,
-                display: "\(resources.diskGiB) Gio"
+                display: "\(resources.diskGiB) GiB"
             )
         }
     }
 
     private func slider(
-        label: String,
+        label: LocalizedStringKey,
         value: Binding<Double>,
         range: ClosedRange<Double>,
-        display: String
+        display: LocalizedStringKey
     ) -> some View {
         LabeledContent(label) {
             HStack(spacing: 10) {
@@ -73,7 +74,7 @@ struct LoginItemToggle: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Toggle("Lancer Cocker à l'ouverture de session", isOn: $isEnabled)
+            Toggle("Launch Cocker at login", isOn: $isEnabled)
                 .onChange(of: isEnabled) { _, newValue in
                     do {
                         try LoginItem.setEnabled(newValue)
@@ -87,7 +88,7 @@ struct LoginItemToggle: View {
                 }
 
             if LoginItem.isBlockedByUser {
-                Button("Autoriser dans les Réglages Système…") {
+                Button("Allow in System Settings…") {
                     LoginItem.openSystemSettings()
                 }
                 .buttonStyle(.link)

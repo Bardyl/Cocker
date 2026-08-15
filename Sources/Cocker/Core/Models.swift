@@ -35,11 +35,11 @@ struct Tool: Identifiable, Hashable, Sendable {
 
         var summary: String {
             switch self {
-            case .homebrew: "Le gestionnaire de paquets qui installe tout le reste."
-            case .colima: "La machine virtuelle qui fait tourner le moteur Docker."
-            case .docker: "La commande `docker` que tu utilises au quotidien."
-            case .compose: "Lance des piles multi-conteneurs décrites en YAML."
-            case .buildx: "Moteur de build moderne, requis par la plupart des images."
+            case .homebrew: "The package manager that installs everything else."
+            case .colima: "The virtual machine that runs the Docker engine."
+            case .docker: "The `docker` command you use every day."
+            case .compose: "Runs multi-container stacks described in YAML."
+            case .buildx: "Modern build engine, required by most images."
             }
         }
 
@@ -80,13 +80,13 @@ enum VMState: Equatable, Sendable {
 
     var label: String {
         switch self {
-        case .unknown: "Vérification…"
-        case .missing: "Non installé"
-        case .notCreated: "Jamais démarré"
-        case .stopped: "Arrêté"
-        case .starting: "Démarrage…"
-        case .running: "En marche"
-        case .stopping: "Arrêt…"
+        case .unknown: "Checking…"
+        case .missing: "Not installed"
+        case .notCreated: "Never started"
+        case .stopped: "Stopped"
+        case .starting: "Starting…"
+        case .running: "Running"
+        case .stopping: "Stopping…"
         }
     }
 
@@ -146,14 +146,14 @@ struct Container: Identifiable, Hashable, Sendable {
 
         var label: String {
             switch self {
-            case .created: "Créé"
-            case .restarting: "Redémarre"
-            case .running: "En marche"
-            case .removing: "Suppression"
-            case .paused: "En pause"
-            case .exited: "Arrêté"
-            case .dead: "Mort"
-            case .unknown: "Inconnu"
+            case .created: "Created"
+            case .restarting: "Restarting"
+            case .running: "Running"
+            case .removing: "Removing"
+            case .paused: "Paused"
+            case .exited: "Stopped"
+            case .dead: "Dead"
+            case .unknown: "Unknown"
             }
         }
     }
@@ -186,8 +186,12 @@ struct ContainerGroup: Identifiable, Hashable, Sendable {
     var isRunning: Bool { runningCount > 0 }
 
     /// Groupe fourre-tout pour les conteneurs lancés hors Compose.
-    static let looseName = "Sans projet"
+    ///
+    /// Le nom sert d'identité — clé de repli, état plié — donc il ne se
+    /// traduit pas. Seul `displayName` est montré à l'utilisateur.
+    static let looseName = "\u{0}ungrouped"
     var isLoose: Bool { name == Self.looseName }
+    var displayName: String { isLoose ? "No project" : name }
 }
 
 // MARK: - Disque

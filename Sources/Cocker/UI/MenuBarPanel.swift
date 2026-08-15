@@ -5,6 +5,7 @@ struct MenuBarPanel: View {
     @Environment(AppState.self) private var state
     @Environment(\.openWindow) private var openWindow
     @Environment(\.openSettings) private var openSettings
+    @Environment(\.locale) private var locale
 
     @State private var collapsedGroups: Set<String> = []
 
@@ -58,20 +59,20 @@ struct MenuBarPanel: View {
                 HStack(spacing: 14) {
                     MetricTile(
                         value: String(state.vm.resources.cpus),
-                        unit: "cœurs",
-                        label: "Processeur",
+                        unit: "cores",
+                        label: "Processor",
                         systemImage: "cpu"
                     )
                     MetricTile(
                         value: formatted(state.vm.resources.memoryGiB),
-                        unit: "Gio",
-                        label: "Mémoire",
+                        unit: "GiB",
+                        label: "Memory",
                         systemImage: "memorychip"
                     )
                     MetricTile(
                         value: diskValue,
                         unit: diskUnit,
-                        label: "Disque",
+                        label: "Disk",
                         systemImage: "internaldrive"
                     )
                 }
@@ -80,8 +81,11 @@ struct MenuBarPanel: View {
             if let operation = state.runningOperation {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
-                    Text(operation)
-                        .font(.caption)
+                    Text(verbatim: String(
+                        format: localized(operation.key, locale),
+                        operation.argument ?? ""
+                    ))
+                    .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
                 }
@@ -105,7 +109,7 @@ struct MenuBarPanel: View {
         }
         .buttonStyle(.plain)
         .disabled(state.isBusy || state.needsOnboarding)
-        .help(state.vm.state.isUsable ? "Au panier" : "Réveiller Cocker")
+        .help(state.vm.state.isUsable ? "Back to the basket" : "Wake Cocker up")
     }
 
     // MARK: - Corps
@@ -117,7 +121,7 @@ struct MenuBarPanel: View {
                 systemImage: "shippingbox",
                 title: DogTalk.Label.notTrained,
                 message: onboardingMessage,
-                actionTitle: "Le dresser"
+                actionTitle: "Train him"
             ) {
                 open(WindowID.onboarding)
             }
@@ -125,8 +129,8 @@ struct MenuBarPanel: View {
             EmptyStateView(
                 systemImage: "moon.zzz",
                 title: DogTalk.Label.idle,
-                message: "Réveille-le pour retrouver tes conteneurs.",
-                actionTitle: state.isBusy ? nil : "Réveiller Cocker"
+                message: "Wake him up to see your containers again.",
+                actionTitle: state.isBusy ? nil : "Wake Cocker up"
             ) {
                 Task { await state.startVM() }
             }
@@ -135,8 +139,8 @@ struct MenuBarPanel: View {
                 systemImage: "tray",
                 title: DogTalk.Label.emptyKennel,
                 message: state.preferences.showStoppedContainers
-                    ? "Lance une pile avec `docker compose up` : Cocker la gardera ici."
-                    : "Rien en marche. Les conteneurs arrêtés sont masqués."
+                    ? "Start a stack with `docker compose up` and Cocker will watch it here."
+                    : "Nothing running. Stopped containers are hidden."
             )
         } else {
             ScrollView {
@@ -154,9 +158,9 @@ struct MenuBarPanel: View {
     private var onboardingMessage: String {
         let missing = state.missingRequiredTools.map(\.kind.displayName)
         if missing.isEmpty {
-            return "Il ne reste qu'à créer la machine virtuelle Docker."
+            return localized("Only the Docker virtual machine is left to create.", locale)
         }
-        return "Il manque : " + missing.joined(separator: ", ") + "."
+        return String(format: localized("Missing: %@", locale), missing.joined(separator: ", "))
     }
 
     /// Les groupes filtrés selon la préférence « afficher les conteneurs arrêtés ».
@@ -199,7 +203,7 @@ struct MenuBarPanel: View {
     private var footer: some View {
         HStack(spacing: 12) {
             if state.vm.state.isUsable {
-                Text("\(state.runningContainerCount) sous surveillance")
+                Text("\(state.runningContainerCount) on watch")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -210,18 +214,18 @@ struct MenuBarPanel: View {
                 NSApplication.shared.activate(ignoringOtherApps: true)
                 openSettings()
             } label: {
-                Label("Réglages", systemImage: "slider.horizontal.3")
+                Label("Settings", systemImage: "slider.horizontal.3")
             }
             .buttonStyle(.plain)
             .font(.caption)
-            .help("Ressources, démarrage, nettoyage")
+            .help("Resources, startup, housekeeping")
 
             Menu {
-                Button("Assistant de configuration…") { open(WindowID.onboarding) }
-                Button("Rafraîchir maintenant") { Task { await state.refresh() } }
+                Button("Setup assistant…") { open(WindowID.onboarding) }
+                Button("Refresh now") { Task { await state.refresh() } }
                 Divider()
-                Button("À propos de Cocker") { open(WindowID.about) }
-                Button("Quitter Cocker") { NSApplication.shared.terminate(nil) }
+                Button("About Cocker") { open(WindowID.about) }
+                Button("Quit Cocker") { NSApplication.shared.terminate(nil) }
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
@@ -252,8 +256,10 @@ struct MenuBarPanel: View {
         return String(format: "%.1f", usedGiB)
     }
 
-    private var diskUnit: String {
-        state.diskUsage == nil ? "Gio alloués" : "Gio / \(state.vm.resources.diskGiB)"
+    private var diskUnit: LocalizedStringKey {
+        state.diskUsage == nil
+            ? LocalizedStringKey("GiB allocated")
+            : LocalizedStringKey("GiB / \(state.vm.resources.diskGiB)")
     }
 }
 
@@ -280,11 +286,11 @@ private struct GroupHeader: View {
                 .font(.caption)
                 .foregroundStyle(group.isRunning ? Color.accentColor : Color.secondary)
 
-            Text(group.name)
+            Text(key: group.displayName)
                 .font(.caption.weight(.semibold))
                 .lineLimit(1)
 
-            Text("\(group.runningCount)/\(group.containers.count)")
+            Text(verbatim: "\(group.runningCount)/\(group.containers.count)")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
 
@@ -305,7 +311,7 @@ private struct GroupHeader: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 .disabled(state.isBusy)
-                .help(group.isRunning ? "Arrêter le projet" : "Démarrer le projet")
+                .help(group.isRunning ? "Stop the project" : "Start the project")
             }
         }
         .padding(.horizontal, 6)
@@ -320,6 +326,7 @@ private struct GroupHeader: View {
 private struct ContainerRow: View {
     @Environment(AppState.self) private var state
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.locale) private var locale
 
     var container: Container
     @State private var isHovered = false
@@ -354,8 +361,12 @@ private struct ContainerRow: View {
         .onHover { isHovered = $0 }
     }
 
+    /// Composé, donc résolu à la main : `Text` ne traduit que des littéraux.
+    /// `status` vient de docker et reste tel quel, c'est sa sortie brute.
     private var subtitle: String {
-        let status = container.status.isEmpty ? container.state.label : container.status
+        let status = container.status.isEmpty
+            ? localized(container.state.label, locale)
+            : container.status
         return "\(container.image) · \(status)"
     }
 
@@ -376,10 +387,10 @@ private struct ContainerRow: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(!container.state.isRunning || !port.isWebLikely)
-                    .help("Ouvrir http://localhost:\(port.hostPort)")
+                    .help("Open http://localhost:\(port.hostPort)")
                 }
                 if container.ports.count > 2 {
-                    Text("+\(container.ports.count - 2)")
+                    Text(verbatim: "+\(container.ports.count - 2)")
                         .font(.system(size: 10))
                         .foregroundStyle(.tertiary)
                 }
@@ -394,7 +405,7 @@ private struct ContainerRow: View {
             } label: {
                 Image(systemName: container.state.isRunning ? "stop.fill" : "play.fill")
             }
-            .help(container.state.isRunning ? "Arrêter" : "Démarrer")
+            .help(container.state.isRunning ? "Stop" : "Start")
 
             Button {
                 Task { await state.perform(.restart, on: container) }
@@ -402,7 +413,7 @@ private struct ContainerRow: View {
                 Image(systemName: "arrow.clockwise")
             }
             .disabled(!container.state.isRunning)
-            .help("Redémarrer")
+            .help("Restart")
 
             Button {
                 NSApplication.shared.activate(ignoringOtherApps: true)
@@ -410,7 +421,7 @@ private struct ContainerRow: View {
             } label: {
                 Image(systemName: "text.alignleft")
             }
-            .help("Voir les logs")
+            .help("View logs")
         }
         .font(.caption)
         .buttonStyle(.plain)

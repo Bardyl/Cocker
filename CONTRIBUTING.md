@@ -46,9 +46,19 @@ title wraps it. Debugging a joke is miserable.
 
 - Code comments are in French, matching the rest of the codebase.
 - Commit messages, issues, pull requests and documentation are in English.
-- The interface is in French for now. Translation work is very welcome, and the
-  first step is extracting the strings — including `DogTalk.swift`, whose tone
-  needs rewriting rather than translating.
+- The interface ships in English and French. English strings in the source are
+  the translation keys; French lives in `Resources/fr.lproj/Localizable.strings`.
+  `Scripts/check-translations.py` fails the build if a visible string has no
+  French counterpart, and CI runs it.
+- Adding a language means a new `.lproj` beside the others plus an entry in
+  `AppLanguage`. `DogTalk.swift` holds the dog wording: rewrite the tone, do not
+  translate it literally — the jokes do not survive a word-for-word pass.
+
+**Watch out for `Text`.** `Text("a literal")` is a `LocalizedStringKey` and gets
+translated; `Text(someVariable)` takes the `StringProtocol` overload and is shown
+as-is. Model layer labels are variables, so they go through `Text(key:)`. For
+strings composed before display, use `localized(_:_:)` with the environment
+locale.
 
 ## Commits
 

@@ -1,0 +1,3 @@
+/* English is the development language: the keys are the strings themselves,
+   so this file stays empty on purpose. It exists so that macOS lists "en"
+   as an available localization. */

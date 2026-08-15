@@ -11,13 +11,13 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             ResourcesTab()
-                .tabItem { Label("Ressources", systemImage: "gauge.with.dots.needle.50percent") }
+                .tabItem { Label("Resources", systemImage: "gauge.with.dots.needle.50percent") }
 
             GeneralTab()
-                .tabItem { Label("Général", systemImage: "gearshape") }
+                .tabItem { Label("General", systemImage: "gearshape") }
 
             MaintenanceTab()
-                .tabItem { Label("Entretien", systemImage: "sparkles") }
+                .tabItem { Label("Housekeeping", systemImage: "sparkles") }
         }
         .frame(width: 520, height: 460)
         .environment(state)
@@ -36,7 +36,7 @@ private struct ResourcesTab: View {
             Section {
                 ResourceControls(resources: $preferences.desiredResources)
             } header: {
-                Text("Ce que la machine virtuelle prend à ton Mac")
+                Text("What the virtual machine takes from your Mac")
             } footer: {
                 Text(ResourceControls.diskCaveat)
                     .font(.caption)
@@ -44,9 +44,9 @@ private struct ResourcesTab: View {
             }
 
             Section {
-                Toggle("Émulation x86 par Rosetta", isOn: $preferences.useRosetta)
+                Toggle("x86 emulation through Rosetta", isOn: $preferences.useRosetta)
             } footer: {
-                Text("Accélère nettement les images amd64 sur Apple Silicon.")
+                Text("Speeds up amd64 images considerably on Apple Silicon.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -64,12 +64,12 @@ private struct ResourcesTab: View {
         .formStyle(.grouped)
     }
 
-    private var appliedSummary: String {
+    private var appliedSummary: LocalizedStringKey {
         switch state.vm.state {
         case .missing, .notCreated:
-            "La VM n'existe pas encore : ces valeurs serviront à sa création."
+            "The VM does not exist yet: these values will be used to create it."
         default:
-            "Ces réglages sont ceux de la VM en cours."
+            "These settings match the running VM."
         }
     }
 
@@ -78,7 +78,7 @@ private struct ResourcesTab: View {
     private var pendingChange: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label(
-                "Appliquer redémarre la VM : les conteneurs en marche s'arrêteront.",
+                "Applying restarts the VM: running containers will stop.",
                 systemImage: "exclamationmark.triangle.fill"
             )
             .font(.callout)
@@ -86,7 +86,7 @@ private struct ResourcesTab: View {
             .fixedSize(horizontal: false, vertical: true)
 
             HStack {
-                Button("Annuler les changements") {
+                Button("Discard the changes") {
                     state.preferences.adopt(state.vm.resources)
                 }
                 .disabled(state.isBusy)
@@ -95,7 +95,7 @@ private struct ResourcesTab: View {
 
                 if state.isBusy { ProgressView().controlSize(.small) }
 
-                Button("Appliquer et redémarrer") {
+                Button("Apply and restart") {
                     Task { await state.applyResources() }
                 }
                 .buttonStyle(.borderedProminent)
@@ -117,38 +117,50 @@ private struct GeneralTab: View {
         Form {
             Section {
                 LoginItemToggle()
-                Toggle("Démarrer Docker à l'ouverture de Cocker", isOn: $preferences.startVMAtLaunch)
+                Toggle("Start Docker when Cocker launches", isOn: $preferences.startVMAtLaunch)
             } header: {
-                Text("Démarrage")
+                Text("Startup")
             } footer: {
-                Text("La VM colima continue de tourner après avoir quitté Cocker : "
-                     + "`docker` reste utilisable dans le terminal.")
+                Text("The colima VM keeps running after you quit Cocker: `docker` stays usable in your terminal.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-            }
-
-            Section("Affichage") {
-                Toggle("Afficher les conteneurs arrêtés", isOn: $preferences.showStoppedContainers)
             }
 
             Section {
-                Toggle("Vérifier les mises à jour au lancement", isOn: $preferences.checksForUpdates)
+                Picker("Language", selection: $preferences.language) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(key: language.label).tag(language)
+                    }
+                }
+            } header: {
+                Text("Display")
             } footer: {
-                Text("Une requête par jour vers l'API GitHub, et rien d'autre : "
-                     + "Cocker n'émet aucun autre appel réseau.")
+                Text("The change applies straight away, no restart needed.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("Machine virtuelle") {
-                InfoRow(label: "État", value: state.vm.state.label)
+            Section {
+                Toggle("Show stopped containers", isOn: $preferences.showStoppedContainers)
+            }
+
+            Section {
+                Toggle("Check for updates at launch", isOn: $preferences.checksForUpdates)
+            } footer: {
+                Text("One request a day to the GitHub API, and nothing else: Cocker makes no other network call.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("Virtual machine") {
+                InfoRow(label: "State", value: state.vm.state.label)
                 InfoRow(label: "Architecture", value: state.vm.architecture ?? "—")
-                InfoRow(label: "Moteur", value: state.vm.runtime ?? "—")
-                InfoRow(label: "Socket Docker", value: shortSocketPath)
+                InfoRow(label: "Engine", value: state.vm.runtime ?? "—")
+                InfoRow(label: "Docker socket", value: shortSocketPath)
             }
 
             Section {
-                Button("Rouvrir l'assistant de configuration…") {
+                Button("Reopen the setup assistant…") {
                     NSApplication.shared.activate(ignoringOtherApps: true)
                     openWindow(id: WindowID.onboarding)
                 }
@@ -167,7 +179,7 @@ private struct GeneralTab: View {
 }
 
 private struct InfoRow: View {
-    var label: String
+    var label: LocalizedStringKey
     var value: String
 
     var body: some View {
@@ -191,32 +203,32 @@ private struct MaintenanceTab: View {
 
     var body: some View {
         Form {
-            Section("Espace occupé") {
+            Section("Space used") {
                 if let usage = state.diskUsage {
                     UsageRow(label: "Images", bytes: usage.imagesBytes)
-                    UsageRow(label: "Conteneurs", bytes: usage.containersBytes)
+                    UsageRow(label: "Containers", bytes: usage.containersBytes)
                     UsageRow(label: "Volumes", bytes: usage.volumesBytes)
-                    UsageRow(label: "Récupérable", bytes: usage.reclaimableBytes, isHighlighted: true)
+                    UsageRow(label: "Reclaimable", bytes: usage.reclaimableBytes, isHighlighted: true)
                 } else {
                     Text(state.vm.state.isUsable
-                         ? "Calcul en cours…"
-                         : "Démarre Docker pour connaître l'espace occupé.")
+                         ? "Working it out…"
+                         : "Start Docker to find out how much space is used.")
                         .foregroundStyle(.secondary)
                 }
             }
 
             Section {
-                Toggle("Supprimer aussi les volumes inutilisés", isOn: $pruneVolumes)
+                Toggle("Also delete unused volumes", isOn: $pruneVolumes)
 
                 HStack {
-                    Button("Nettoyer…") { isConfirmingPrune = true }
+                    Button("Clean up…") { isConfirmingPrune = true }
                         .disabled(state.isBusy || !state.vm.state.isUsable)
 
                     if state.isBusy { ProgressView().controlSize(.small) }
 
                     Spacer()
 
-                    Button("Rafraîchir") {
+                    Button("Refresh") {
                         Task {
                             await state.refresh()
                             await state.refreshDiskUsage()
@@ -225,39 +237,37 @@ private struct MaintenanceTab: View {
                     .disabled(state.isBusy)
                 }
             } header: {
-                Text("Nettoyage")
+                Text("Cleaning")
             } footer: {
                 Text(pruneVolumes
-                     ? "Les volumes contiennent tes bases de données de développement. "
-                       + "Ce qui n'est rattaché à aucun conteneur sera perdu."
-                     : "Supprime les conteneurs arrêtés, les réseaux orphelins et les "
-                       + "images inutilisées.")
+                     ? "Volumes hold your development databases. Anything not attached to a container will be lost."
+                     : "Deletes stopped containers, orphaned networks and unused images.")
                     .font(.caption)
                     .foregroundStyle(pruneVolumes ? Color.orange : Color.secondary)
             }
 
-            Section("Journal") {
-                LogConsole(lines: state.log, emptyMessage: "Aucune opération récente.")
+            Section("Log") {
+                LogConsole(lines: state.log, emptyMessage: "No recent operation.")
                     .frame(height: 110)
             }
         }
         .formStyle(.grouped)
         .task { await state.refreshDiskUsage() }
-        .confirmationDialog("Nettoyer Docker ?", isPresented: $isConfirmingPrune) {
-            Button("Nettoyer", role: .destructive) {
+        .confirmationDialog("Clean up Docker?", isPresented: $isConfirmingPrune) {
+            Button("Clean up", role: .destructive) {
                 Task { await state.prune(includeVolumes: pruneVolumes) }
             }
-            Button("Annuler", role: .cancel) {}
+            Button("Cancel", role: .cancel) {}
         } message: {
             Text(pruneVolumes
-                 ? "Les images, conteneurs arrêtés, réseaux et volumes inutilisés seront supprimés. C'est irréversible."
-                 : "Les images, conteneurs arrêtés et réseaux inutilisés seront supprimés.")
+                 ? "Unused images, stopped containers, networks and volumes will be deleted. This cannot be undone."
+                 : "Unused images, stopped containers and networks will be deleted.")
         }
     }
 }
 
 private struct UsageRow: View {
-    var label: String
+    var label: LocalizedStringKey
     var bytes: Int64
     var isHighlighted: Bool = false
 

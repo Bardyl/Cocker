@@ -49,14 +49,14 @@ struct LogsView: View {
                         .foregroundStyle(.secondary)
                 }
             } else {
-                Text("Conteneur introuvable").font(.headline)
+                Text("Container not found").font(.headline)
             }
 
             Spacer()
 
             if isLoading { ProgressView().controlSize(.small) }
 
-            Toggle("Suivre", isOn: $autoRefresh)
+            Toggle("Follow", isOn: $autoRefresh)
                 .toggleStyle(.switch)
                 .controlSize(.mini)
 
@@ -66,7 +66,7 @@ struct LogsView: View {
             } label: {
                 Image(systemName: "doc.on.doc")
             }
-            .help("Copier les logs")
+            .help("Copy the logs")
             .disabled(text.isEmpty)
         }
         .padding(12)
@@ -75,7 +75,7 @@ struct LogsView: View {
     private var console: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                Text(text.isEmpty ? "Aucune sortie." : text)
+                Text(text.isEmpty ? String(localized: "No output.") : text)
                     .font(.system(size: 11, design: .monospaced))
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)

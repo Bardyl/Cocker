@@ -22,6 +22,7 @@ struct StatusDot: View {
 
 /// Étiquette compacte « pastille + texte » utilisée dans les en-têtes.
 struct StatusPill: View {
+    /// Clé de traduction, pas du texte fini.
     var text: String
     var color: Color
     var isPulsing: Bool = false
@@ -29,7 +30,7 @@ struct StatusPill: View {
     var body: some View {
         HStack(spacing: 6) {
             StatusDot(color: color, isPulsing: isPulsing)
-            Text(text)
+            Text(key: text)
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
         }
@@ -42,8 +43,8 @@ struct StatusPill: View {
 /// Une mesure : valeur en gras, unité et libellé discrets.
 struct MetricTile: View {
     var value: String
-    var unit: String?
-    var label: String
+    var unit: LocalizedStringKey?
+    var label: LocalizedStringKey
     var systemImage: String
 
     var body: some View {
@@ -97,6 +98,7 @@ struct ErrorBanner: View {
 /// État vide : une icône, une phrase, éventuellement une action.
 struct EmptyStateView: View {
     var systemImage: String
+    /// Clés de traduction : ces libellés viennent des appelants.
     var title: String
     var message: String
     var actionTitle: String?
@@ -108,17 +110,17 @@ struct EmptyStateView: View {
                 .font(.system(size: 26))
                 .foregroundStyle(.tertiary)
 
-            Text(title)
+            Text(key: title)
                 .font(.callout.weight(.medium))
 
-            Text(message)
+            Text(key: message)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
 
             if let actionTitle, let action {
-                Button(actionTitle, action: action)
+                Button(LocalizedStringKey(actionTitle), action: action)
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
                     .padding(.top, 2)
@@ -133,7 +135,7 @@ struct EmptyStateView: View {
 /// Journal défilant, réutilisé par l'assistant et par la vue des logs.
 struct LogConsole: View {
     var lines: [AppState.LogLine]
-    var emptyMessage: String = "Rien à afficher pour l'instant."
+    var emptyMessage: LocalizedStringKey = "Nothing to show yet."
 
     var body: some View {
         ScrollViewReader { proxy in

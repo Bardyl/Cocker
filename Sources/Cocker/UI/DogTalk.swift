@@ -6,6 +6,11 @@ import Foundation
 /// on peut le faire évoluer sans fouiller les vues. Règle qu'on s'impose :
 /// le chien décore les titres et les attentes, jamais la cause d'une panne.
 /// Un message d'erreur reste affiché mot pour mot sous le titre.
+///
+/// Ce sont des clés de traduction, pas du texte : l'anglais fait office de clé
+/// et le français vit dans `fr.lproj`. Le ton ne se traduit pas mot à mot, il
+/// se réécrit — c'est pour ça que les deux versions ne se correspondent pas
+/// toujours littéralement.
 enum DogTalk {
 
     /// Phrases qui tournent pendant une attente. Elles ne décrivent rien de
@@ -13,62 +18,66 @@ enum DogTalk {
     /// cours est annoncée juste au-dessus.
     enum Waiting {
         static let installing = [
-            "Il renifle les formules Homebrew…",
-            "Il rapporte colima…",
-            "Il secoue la poussière…",
-            "Il mâchouille les paquets…",
-            "Il lâche la balle, la reprend aussitôt…",
-            "Il fait tomber quelque chose, on ne dira rien…",
+            "He's sniffing out the Homebrew formulas…",
+            "He's fetching colima…",
+            "He's shaking off the dust…",
+            "He's chewing through the packages…",
+            "He drops the ball, picks it straight back up…",
+            "He knocked something over. We'll say nothing…",
         ]
 
         static let creating = [
-            "Il creuse un trou pour la niche…",
-            "Il tourne trois fois avant de se coucher…",
-            "Il mâchouille l'image disque…",
-            "Il tasse bien la paille…",
-            "Il vérifie qu'il n'y a pas de chat dans le coin…",
-            "Il enterre un os pour plus tard…",
+            "He's digging a hole for the kennel…",
+            "He's turning around three times before lying down…",
+            "He's gnawing on the disk image…",
+            "He's patting down the straw…",
+            "He's checking there's no cat around…",
+            "He's burying a bone for later…",
         ]
 
         static let starting = [
-            "Il se réveille…",
-            "Il s'étire longuement…",
-            "Il agite la queue…",
-            "Il vient en trottinant…",
+            "He's waking up…",
+            "He's having a long stretch…",
+            "He's wagging his tail…",
+            "He's trotting over…",
         ]
 
         static let stopping = [
-            "Il rentre au panier…",
-            "Il fait ses trois tours…",
-            "Il pose la tête sur ses pattes…",
+            "He's heading back to his basket…",
+            "He's doing his three turns…",
+            "He's resting his head on his paws…",
         ]
 
         static let cleaning = [
-            "Il déterre les vieux os…",
-            "Il fait le tri dans ses jouets…",
-            "Il secoue le panier…",
+            "He's digging up the old bones…",
+            "He's sorting through his toys…",
+            "He's shaking out the basket…",
         ]
     }
 
     /// Titres et étiquettes courtes.
     enum Label {
-        static let idle = "Cocker fait la sieste"
-        static let running = "Cocker monte la garde"
-        static let emptyKennel = "La niche est vide"
-        static let notTrained = "Cocker n'est pas encore dressé"
-        static let lostBall = "Il a perdu la balle"
+        static let idle = "Cocker is napping"
+        static let running = "Cocker is on guard"
+        static let emptyKennel = "The kennel is empty"
+        static let notTrained = "Cocker isn't trained yet"
+        static let lostBall = "He lost the ball"
     }
 
     /// Nom d'une opération en cours, affiché dans le panneau.
+    ///
+    /// Renvoie une clé : c'est la vue qui la traduira, au moment de l'afficher
+    /// et dans la langue du moment.
     enum Operation {
-        static let start = "Cocker se réveille"
-        static let stop = "Cocker rentre au panier"
-        static let resize = "Cocker refait sa niche"
-        static let cleaning = "Cocker fait le ménage"
+        static let start = "Cocker is waking up"
+        static let stop = "Cocker is going back to his basket"
+        static let resize = "Cocker is rebuilding his kennel"
+        static let cleaning = "Cocker is tidying up"
+        static let installAll = "Cocker is doing his rounds"
 
-        static func install(_ tool: String) -> String { "Cocker va chercher \(tool)" }
-        static func link(_ tool: String) -> String { "Cocker range \(tool)" }
-        static let installAll = "Cocker fait sa tournée"
-        static func container(_ action: String, _ name: String) -> String { "\(action) \(name)" }
+        /// Clés à format : le nom de l'outil est un argument, pas un morceau
+        /// de la clé — sinon chaque outil produirait une traduction distincte.
+        static let installOne = "Cocker is fetching %@"
+        static let linkOne = "Cocker is putting away %@"
     }
 }

@@ -5,7 +5,7 @@ enum Docker {
 
     private static func binary() throws -> String {
         guard let path = Shell.which("docker") else {
-            throw Shell.Failure(command: "docker", message: "Le CLI docker n'est pas installé.")
+            throw Shell.Failure(command: "docker", message: "The docker CLI is not installed.")
         }
         return path
     }
@@ -90,9 +90,9 @@ enum Docker {
 
         var label: String {
             switch self {
-            case .start: "Démarrer"
-            case .stop: "Arrêter"
-            case .restart: "Redémarrer"
+            case .start: "Start"
+            case .stop: "Stop"
+            case .restart: "Restart"
             }
         }
     }
