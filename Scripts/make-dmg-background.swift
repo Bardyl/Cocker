@@ -82,7 +82,11 @@ func drawPawTrail() {
         NSGraphicsContext.saveGraphicsState()
         let transform = NSAffineTransform()
         transform.translateX(by: x, yBy: y)
-        transform.rotate(byDegrees: index.isMultiple(of: 2) ? -16 : 16)
+        // Le symbole a les doigts vers le haut ; on le couche d'un quart de
+        // tour pour qu'ils pointent vers le dossier Applications, comme une
+        // bête qui marche vers la droite. Le léger balancement autour de cet
+        // axe évite l'alignement mécanique.
+        transform.rotate(byDegrees: -90 + (index.isMultiple(of: 2) ? -8 : 8))
         transform.concat()
         tinted.draw(
             in: NSRect(
