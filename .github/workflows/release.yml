@@ -19,12 +19,7 @@ jobs:
     runs-on: macos-15
 
     steps:
-      # fetch-tags : sans l'objet du tag annoté, les notes de version se
-      # rabattraient silencieusement sur le message du dernier commit.
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          fetch-tags: true
 
       - name: Resolve the version
         id: version
@@ -129,12 +124,24 @@ jobs:
           zip="$RUNNER_TEMP/Cocker-${{ steps.version.outputs.version }}.zip"
 
           # Les notes vivent dans l'annotation du tag : écrites à la main,
-          # versionnées avec ce qu'elles décrivent. On les extrait nous-mêmes
-          # plutôt que par --notes-from-tag, qui retombe sans prévenir sur le
-          # message du dernier commit quand l'objet du tag manque.
-          git tag -l --format='%(contents)' "$tag" > "$RUNNER_TEMP/notes.md"
+          # versionnées avec ce qu'elles décrivent.
+          #
+          # On interroge l'API plutôt que git : `actions/checkout` matérialise
+          # un tag *léger* sur le runner, dont `%(contents)` renvoie le message
+          # du dernier commit. C'est silencieux, et on publie alors des notes
+          # plausibles mais fausses.
+          object_type=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --jq '.object.type')
+          if [ "$object_type" != "tag" ]; then
+            echo "::error::$tag est un tag léger : pas d'annotation, donc pas de notes"
+            exit 1
+          fi
+
+          object_sha=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" --jq '.object.sha')
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$object_sha" --jq '.message' \
+            > "$RUNNER_TEMP/notes.md"
+
           if [ ! -s "$RUNNER_TEMP/notes.md" ]; then
-            echo "::error::le tag $tag n'a pas d'annotation, pas de notes de version"
+            echo "::error::l'annotation de $tag est vide"
             exit 1
           fi
 
