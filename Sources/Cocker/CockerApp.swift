@@ -22,7 +22,7 @@ struct CockerApp: App {
         }
         .menuBarExtraStyle(.window)
 
-        Window("Dressage de Cocker", id: WindowID.onboarding) {
+        Window("Cocker Setup", id: WindowID.onboarding) {
             OnboardingView()
                 .environment(state)
                 .environment(\.locale, state.preferences.language.locale)

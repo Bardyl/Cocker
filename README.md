@@ -36,9 +36,13 @@ The colima VM keeps running after you quit Cocker: `docker` still answers in you
 terminal until you stop it explicitly.
 
 <p align="center">
-  <img src="docs/screenshots/onboarding-welcome.png" width="290" alt="Setup assistant, welcome screen">
-  <img src="docs/screenshots/onboarding-resources.png" width="290" alt="Setup assistant, allocating resources">
-  <img src="docs/screenshots/logs.png" width="290" alt="Container logs window">
+  <img src="docs/screenshots/onboarding-welcome.png" width="270" alt="Setup assistant, welcome screen">
+  <img src="docs/screenshots/onboarding-resources.png" width="270" alt="Setup assistant, allocating resources">
+  <img src="docs/screenshots/onboarding-done.png" width="270" alt="Setup assistant, finished">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/logs.png" width="560" alt="Container logs window, following a running container">
 </p>
 
 ## Requirements

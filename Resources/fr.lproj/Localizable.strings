@@ -210,3 +210,7 @@
 "Version %@ is available" = "La version %@ est disponible";
 "Source code" = "Code source";
 "Report an issue" = "Signaler un problème";
+
+/* --- Titres de fenêtre (suivent AppleLanguages, pas la locale d'environnement) --- */
+"Cocker Setup" = "Dressage de Cocker";
+"Logs" = "Logs";
