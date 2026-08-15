@@ -20,7 +20,7 @@ enum Shell {
             if !stderrTrimmed.isEmpty { return stderrTrimmed }
             let stdoutTrimmed = stdout.trimmingCharacters(in: .whitespacesAndNewlines)
             if !stdoutTrimmed.isEmpty { return stdoutTrimmed }
-            return "Le processus s'est terminé avec le code \(exitCode)."
+            return "The process exited with code \(exitCode)."
         }
     }
 
@@ -172,6 +172,13 @@ private final class LineBuffer: @unchecked Sendable {
     private var accumulated = ""
     private var pending = ""
 
+    /// Plafond de ce qu'on retient. Un `brew install` produit plusieurs Mo que
+    /// personne ne relira, et l'appelant n'exploite `text` que pour analyser
+    /// une sortie courte ou récupérer un message d'erreur — lequel se trouve
+    /// à la fin. On coupe donc par le début, sur une frontière de ligne, pour
+    /// ne jamais livrer un fragment de JSON.
+    private static let retentionLimit = 1 << 20
+
     var text: String {
         lock.lock()
         defer { lock.unlock() }
@@ -183,6 +190,7 @@ private final class LineBuffer: @unchecked Sendable {
 
         lock.lock()
         accumulated += chunk
+        trimAccumulatedIfNeeded()
         pending += chunk
         var lines: [String] = []
         while let newline = pending.firstIndex(of: "\n") {
@@ -195,6 +203,27 @@ private final class LineBuffer: @unchecked Sendable {
         for line in lines { onOutput(line) }
     }
 
+    /// À appeler verrou tenu.
+    private func trimAccumulatedIfNeeded() {
+        guard accumulated.utf8.count > Self.retentionLimit else { return }
+
+        let overflow = accumulated.utf8.count - Self.retentionLimit
+        guard let start = accumulated.utf8.index(
+            accumulated.utf8.startIndex, offsetBy: overflow, limitedBy: accumulated.utf8.endIndex
+        )?.samePosition(in: accumulated) else {
+            accumulated = ""
+            return
+        }
+
+        // On repart à la ligne suivante : couper au milieu d'une ligne
+        // produirait un fragment que le décodeur JSON refuserait.
+        if let newline = accumulated[start...].firstIndex(of: "\n") {
+            accumulated = String(accumulated[accumulated.index(after: newline)...])
+        } else {
+            accumulated = String(accumulated[start...])
+        }
+    }
+
     func flush(emitTo onOutput: (@Sendable (String) -> Void)?) {
         lock.lock()
         let remainder = pending
@@ -203,5 +232,38 @@ private final class LineBuffer: @unchecked Sendable {
 
         guard let onOutput, !remainder.isEmpty else { return }
         onOutput(remainder)
+    }
+}
+
+/// Tampon de lignes partagé entre un processus et l'acteur principal.
+///
+/// Volontairement une classe verrouillée plutôt qu'un acteur : les lignes
+/// arrivent depuis les callbacks de `FileHandle`, qui ne sont pas asynchrones.
+/// Un acteur imposerait un `Task` par ligne, exactement ce qu'on cherche à
+/// éviter.
+final class PendingLines: @unchecked Sendable {
+    private let lock = NSLock()
+    private var lines: [String] = []
+
+    /// Au-delà, on jette le plus ancien : personne ne lira les dix mille
+    /// premières lignes d'un `brew install`, et le journal les tronquerait
+    /// de toute façon.
+    private static let limit = 2_000
+
+    func append(_ line: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        lines.append(line)
+        if lines.count > Self.limit {
+            lines.removeFirst(lines.count - Self.limit)
+        }
+    }
+
+    func drain() -> [String] {
+        lock.lock()
+        defer { lock.unlock() }
+        let drained = lines
+        lines.removeAll(keepingCapacity: true)
+        return drained
     }
 }

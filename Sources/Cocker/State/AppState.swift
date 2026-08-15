@@ -112,10 +112,7 @@ final class AppState {
                     enabled: self.preferences.checksForUpdates
                 )
 
-                // Panneau ouvert : on veut voir les conteneurs bouger.
-                // Panneau fermé : seul le compteur de l'icône compte.
-                let interval: Duration = self.isPanelVisible ? .seconds(3) : .seconds(15)
-                try? await Task.sleep(for: interval)
+                try? await Task.sleep(for: self.pollingInterval)
             }
         }
     }
@@ -129,28 +126,62 @@ final class AppState {
     /// que la réponse ait été oui ou non.
     private var hasAttemptedAutoStart = false
 
+    /// Trois rythmes, selon ce qu'il y a à voir.
+    ///
+    /// Panneau ouvert, on regarde les conteneurs bouger. Panneau fermé mais VM
+    /// en marche, seul le compteur de l'icône dépend du sondage. VM à l'arrêt,
+    /// plus rien ne peut changer sans une action — soit ici, soit dans un
+    /// terminal, et une minute de retard n'a alors aucune conséquence.
+    private var pollingInterval: Duration {
+        if isPanelVisible { return .seconds(3) }
+        return vm.state.isUsable ? .seconds(15) : .seconds(60)
+    }
+
     private var canAutoStartVM: Bool {
         !isBusy && vm.state == .stopped && !needsOnboarding
     }
 
     // MARK: - Sondage
 
-    /// Sonder les outils coûte cinq processus, dont `brew --version` qui est
-    /// lent : inutile de le refaire à chaque tour de boucle. Le disque ne
-    /// change qu'après une installation, et celles-ci forcent le sondage.
+    // Trois cadences, parce que les trois sondages n'ont ni le même coût ni
+    // le même rythme de changement. Mesures faites sur cette machine :
+    //   outils        ~0,40 s  (dont `colima version` à 0,23 s)  — change à
+    //                          l'installation, donc jamais en pratique
+    //   état de la VM  0,10 s  — change quand on démarre ou arrête
+    //   conteneurs     0,01 s  — change tout le temps, c'est ce qu'on regarde
     private var lastToolProbe: Date?
-    private static let toolProbeInterval: TimeInterval = 60
+    private var lastVMProbe: Date?
+    private static let vmProbeInterval: TimeInterval = 10
 
     func refreshTools() async {
         tools = await Toolchain.probe()
         lastToolProbe = Date()
     }
 
-    func refresh() async {
-        let isStale = lastToolProbe.map { Date().timeIntervalSince($0) > Self.toolProbeInterval } ?? true
-        if isStale { await refreshTools() }
+    private func isStale(_ date: Date?, _ interval: TimeInterval) -> Bool {
+        date.map { Date().timeIntervalSince($0) > interval } ?? true
+    }
 
-        vm = await Colima.status()
+    /// Force le prochain sondage à repartir de zéro, quel que soit le cache.
+    private func invalidateProbes() {
+        lastToolProbe = nil
+        lastVMProbe = nil
+    }
+
+    func refresh() async {
+        // Les outils ne s'installent pas tout seuls : on les sonde au
+        // lancement, après chaque opération, et quand l'assistant s'ouvre.
+        // Le faire périodiquement coûtait 0,40 s de processus par minute pour
+        // constater qu'il ne s'était rien passé.
+        if lastToolProbe == nil { await refreshTools() }
+
+        // Pendant une manœuvre, l'état affiché est celui qu'on a posé
+        // volontairement (« Démarrage… »). colima dirait encore « Arrêté »
+        // pendant la minute que prend le réveil : le sondage attendra.
+        if runningOperation == nil, isStale(lastVMProbe, Self.vmProbeInterval) {
+            vm = await Colima.status()
+            lastVMProbe = Date()
+        }
 
         // Une VM à l'arrêt n'a pas de démon à interroger.
         guard vm.state.isUsable else {
@@ -214,10 +245,18 @@ final class AppState {
 
     func appendLog(_ text: String, isError: Bool = false) {
         log.append(LogLine(text: text, isError: isError))
-        // Une installation Homebrew crache des milliers de lignes : on garde
-        // la fin, c'est là que se trouve l'erreur éventuelle.
-        if log.count > 500 { log.removeFirst(log.count - 500) }
+        trimLog()
     }
+
+    /// Une installation Homebrew crache des milliers de lignes : on garde la
+    /// fin, c'est là que se trouve l'erreur éventuelle.
+    private func trimLog() {
+        if log.count > Self.logLineLimit {
+            log.removeFirst(log.count - Self.logLineLimit)
+        }
+    }
+
+    private static let logLineLimit = 500
 
     func clearLog() { log.removeAll() }
 
@@ -228,7 +267,18 @@ final class AppState {
         guard runningOperation == nil else { return }
         runningOperation = operation
         lastError = nil
+        // Filet de sécurité : une annulation ne doit pas laisser l'interface
+        // verrouillée sur une opération fantôme.
         defer { runningOperation = nil }
+
+        // Vide le tampon pendant que l'opération tourne : le journal avance
+        // sous les yeux de l'utilisateur sans coûter un saut d'acteur par ligne.
+        let drain = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(200))
+                self?.drainPendingLines()
+            }
+        }
 
         do {
             try await body()
@@ -237,17 +287,41 @@ final class AppState {
             appendLog(error.localizedDescription, isError: true)
         }
 
-        // Une opération vient peut-être d'installer ou de lier un outil :
-        // le cache du sondage n'est plus fiable.
-        lastToolProbe = nil
+        drain.cancel()
+        drainPendingLines()
+
+        // L'opération est terminée avant le rafraîchissement, pas après :
+        // sinon le sondage se croirait encore en pleine manœuvre et sauterait
+        // la lecture de l'état, laissant l'affichage figé sur « Démarrage… ».
+        runningOperation = nil
+
+        // Une opération vient de changer l'état de la machine : aucun cache
+        // de sondage n'est plus fiable.
+        invalidateProbes()
         await refresh()
     }
 
+    /// Tampon des lignes en attente d'affichage.
+    ///
+    /// `brew install` crache des milliers de lignes en quelques secondes. Une
+    /// tâche `@MainActor` par ligne, c'était autant de sauts d'acteur et
+    /// autant d'invalidations SwiftUI — pour du texte que personne ne lit
+    /// ligne à ligne. On accumule hors acteur et on vide périodiquement.
+    private let pendingLines = PendingLines()
+
     /// Collecte les lignes d'un processus depuis n'importe quel thread.
     private nonisolated func logCollector() -> @Sendable (String) -> Void {
-        { [weak self] line in
-            Task { @MainActor [weak self] in self?.appendLog(line) }
+        { [pendingLines] line in pendingLines.append(line) }
+    }
+
+    /// Déverse le tampon dans le journal, en un seul lot.
+    private func drainPendingLines() {
+        let lines = pendingLines.drain()
+        guard !lines.isEmpty else { return }
+        for line in lines {
+            log.append(LogLine(text: line))
         }
+        trimLog()
     }
 
     func startVM() async {

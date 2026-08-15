@@ -65,14 +65,35 @@ Le disque ne peut qu'augmenter : colima refuse de réduire un disque existant.
 
 ## Le rythme de sondage
 
-Trois cadences, parce qu'elles n'ont pas le même coût :
+Chaque sondage lance un processus. Coûts mesurés sur une machine Apple Silicon :
 
-- les conteneurs et l'état de la VM, toutes les 3 s panneau ouvert, 15 s sinon ;
-- les outils installés, au plus une fois par minute — cinq processus dont
-  `brew --version`, qui est lent ;
-- l'espace disque (`docker system df`), uniquement panneau ouvert.
+| Commande | Coût |
+|---|---|
+| `colima list --json` | 0,10 s |
+| `colima status --json` | 0,37 s |
+| `docker ps` | 0,01 s |
+| `docker system df` | 0,01 s |
+| sondage des outils (5 processus) | 0,40 s |
 
-Toute opération (installation, lien, démarrage) invalide le cache des outils.
+D'où trois décisions :
+
+**On lit l'état de la VM avec `list`, pas `status`.** Trois fois et demie moins
+cher, et `status` échoue quand la VM dort — on payait alors les deux. `list`
+porte déjà tout ce que l'interface affiche.
+
+**Les conteneurs sont sondés bien plus souvent que la VM.** À 0,01 s, `docker
+ps` peut tourner toutes les 3 secondes sans qu'on le sente ; l'état de la VM ne
+change qu'à la demande, donc toutes les 10 s. Panneau fermé, la boucle ralentit
+à 15 s, et à 60 s quand la VM est arrêtée — plus rien ne peut alors changer sans
+une action délibérée.
+
+**Les outils ne sont pas sondés périodiquement du tout.** Ils ne s'installent
+pas seuls : au lancement, après chaque opération, et à l'ouverture de
+l'assistant. Le faire à la minute coûtait 0,40 s de processus pour constater
+qu'il ne s'était rien passé.
+
+Au repos, panneau fermé, l'app consomme 84 Mo de RSS stables et ne fait
+tourner que 0,44 s de processus enfants par minute.
 
 ## Ce que Cocker ne fait pas
 

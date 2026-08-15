@@ -155,23 +155,20 @@ struct GroupingTests {
 @Suite("État colima")
 struct ColimaParsingTests {
 
-    /// `colima status --json` dit `cpu` au singulier et `display_name`.
-    @Test("La sortie de `colima status` est lue")
-    func readsStatusOutput() {
+    /// Le décodeur accepte encore `cpu` au singulier et `display_name` : ce
+    /// sont les clés de `colima status --json`, que Cocker n'appelle plus mais
+    /// dont le format pourrait revenir dans `list`.
+    @Test("Les clés au singulier restent comprises")
+    func readsSingularKeys() {
         let output = """
-        {"display_name":"colima","driver":"macOS Virtualization.Framework","arch":"aarch64",\
-        "runtime":"docker","mount_type":"virtiofs",\
-        "docker_socket":"unix:///Users/x/.colima/default/docker.sock",\
-        "kubernetes":false,"cpu":6,"memory":12884901888,"disk":64424509440}
+        {"display_name":"default","status":"Running","arch":"aarch64",\
+        "runtime":"docker","cpu":6,"memory":12884901888,"disk":64424509440}
         """
-        let status = try! #require(Colima.parseRunningStatus(from: output))
+        let status = try! #require(Colima.parseList(from: output))
 
-        #expect(status.state == .running)
         #expect(status.resources.cpus == 6)
-        #expect(status.resources.memoryGiB == 12)
-        #expect(status.resources.diskGiB == 60)
-        #expect(status.runtime == "docker")
         #expect(status.architecture == "aarch64")
+        #expect(status.runtime == "docker")
     }
 
     /// `colima list --json` dit `cpus` au pluriel et porte un `status`.
@@ -207,7 +204,6 @@ struct ColimaParsingTests {
     @Test("Une sortie vide ne produit pas d'état")
     func handlesEmptyOutput() {
         #expect(Colima.parseList(from: "") == nil)
-        #expect(Colima.parseRunningStatus(from: "") == nil)
     }
 
     /// Les anciennes versions annonçaient des GiB, les récentes des octets.

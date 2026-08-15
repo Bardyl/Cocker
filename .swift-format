@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "indentation": { "spaces": 4 },
+  "lineLength": 100,
+  "respectsExistingLineBreaks": true,
+  "lineBreakBeforeControlFlowKeywords": false,
+  "lineBreakBeforeEachArgument": false,
+  "indentConditionalCompilationBlocks": false,
+  "prioritizeKeepingFunctionOutputTogether": true,
+  "rules": {
+    "AlwaysUseLowerCamelCase": true,
+    "AmbiguousTrailingClosureOverload": true,
+    "NoBlockComments": false,
+    "NoLeadingUnderscores": false,
+    "OrderedImports": true,
+    "UseLetInEveryBoundCaseVariable": true,
+    "UseShorthandTypeNames": true,
+    "UseSynthesizedInitializer": false,
+    "ValidateDocumentationComments": true
+  }
+}

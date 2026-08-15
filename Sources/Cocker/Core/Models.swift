@@ -110,7 +110,6 @@ struct VMStatus: Equatable, Sendable {
     var runtime: String?
     var architecture: String?
     var dockerSocket: String?
-    var ipAddress: String?
 
     static let unknown = VMStatus()
 }

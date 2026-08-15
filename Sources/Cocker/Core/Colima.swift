@@ -21,24 +21,14 @@ enum Colima {
             return VMStatus(state: .missing)
         }
 
-        // `status --json` ne répond que si la VM tourne ; `list --json` répond
-        // toujours et décrit aussi les profils arrêtés.
-        if let running = try? await Shell.run(colima, ["status", "--profile", profile, "--json"]),
-           running.isSuccess,
-           let status = parseRunningStatus(from: running.stdout) {
-            return status
-        }
-
+        // `list --json` et pas `status --json` : le premier coûte 0,10 s, le
+        // second 0,37 s, et il échoue quand la VM dort — on payait alors les
+        // deux. `list` répond dans tous les cas et porte déjà tout ce que
+        // l'interface montre : état, cœurs, mémoire, disque, arch, moteur.
         guard let listed = try? await Shell.run(colima, ["list", "--json"]), listed.isSuccess else {
             return VMStatus(state: .notCreated)
         }
         return parseList(from: listed.stdout) ?? VMStatus(state: .notCreated)
-    }
-
-    /// Sortie de `colima status --json` : elle n'existe que si la VM tourne,
-    /// et ne porte pas de champ `status`.
-    static func parseRunningStatus(from output: String) -> VMStatus? {
-        Snapshot.decode(output)?.asStatus(fallbackState: .running)
     }
 
     /// Sortie de `colima list --json` : une ligne JSON par profil, présente
@@ -146,10 +136,6 @@ private struct Snapshot: Decodable {
         dockerSocket = try container.decodeIfPresent(String.self, forKey: .dockerSocket)
     }
 
-    static func decode(_ text: String) -> Snapshot? {
-        decodeAll(text).first
-    }
-
     /// colima écrit un objet JSON par ligne.
     static func decodeAll(_ text: String) -> [Snapshot] {
         let decoder = JSONDecoder()
@@ -167,7 +153,6 @@ private struct Snapshot: Decodable {
         status.state = Self.parseState(self.status) ?? fallbackState
         status.architecture = arch
         status.runtime = runtime
-        status.ipAddress = address
         status.dockerSocket = dockerSocket ?? Colima.dockerSocketPath()
         status.resources = VMResources(
             cpus: cpus ?? VMResources.default.cpus,

@@ -23,9 +23,31 @@ func localized(_ key: String, _ locale: Locale) -> String {
     let fallback = Bundle.main.localizedString(forKey: key, value: key, table: nil)
 
     guard let code = locale.language.languageCode?.identifier,
-          let path = Bundle.main.path(forResource: code, ofType: "lproj"),
-          let bundle = Bundle(path: path)
+          let bundle = LocalizationBundles.shared.bundle(for: code)
     else { return fallback }
 
     return bundle.localizedString(forKey: key, value: fallback, table: nil)
+}
+
+/// Cache des bundles `.lproj`.
+///
+/// `localized(_:_:)` est appelé pendant la mise en page — une fois par ligne de
+/// conteneur, à chaque rafraîchissement. Retrouver le `.lproj` à chaque appel
+/// voulait dire une recherche sur le disque par ligne affichée.
+private final class LocalizationBundles: @unchecked Sendable {
+    static let shared = LocalizationBundles()
+
+    private let lock = NSLock()
+    private var cache: [String: Bundle?] = [:]
+
+    func bundle(for code: String) -> Bundle? {
+        lock.lock()
+        defer { lock.unlock() }
+
+        if let known = cache[code] { return known }
+
+        let found = Bundle.main.path(forResource: code, ofType: "lproj").flatMap(Bundle.init(path:))
+        cache[code] = found
+        return found
+    }
 }
