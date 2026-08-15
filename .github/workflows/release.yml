@@ -169,13 +169,20 @@ jobs:
             Packaging/cocker.rb.template > "$RUNNER_TEMP/tap/Casks/cocker.rb"
 
           cd "$RUNNER_TEMP/tap"
-          if git diff --quiet; then
+
+          # `git add` avant de comparer : `git diff` ignore les fichiers non
+          # suivis, si bien qu'un cask créé pour la première fois passait pour
+          # « déjà à jour » et n'était jamais poussé.
+          git add Casks/cocker.rb
+          if git diff --cached --quiet; then
             echo "cask déjà à jour"
             exit 0
           fi
+
           git -c user.name="Mathieu MENUT" -c user.email="mathieu@menut.pro" \
-            commit -am "Cocker $VERSION"
+            commit -m "Cocker $VERSION"
           git push
+          echo "cask publié en $VERSION"
 
       - name: Publish the release
         env:
